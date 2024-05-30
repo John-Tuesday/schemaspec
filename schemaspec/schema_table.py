@@ -1,5 +1,6 @@
 __all__ = [
     "Schema",
+    "SchemaTable",
     "Namespace",
 ]
 
@@ -77,7 +78,7 @@ class _SchemaItem[T]:
         return s
 
 
-class _SchemaTable:
+class SchemaTable:
     """Table of key-value options and optionally subtables."""
 
     def __init__(self, full_name: str, description: str = ""):
@@ -114,9 +115,9 @@ class _SchemaTable:
         self,
         name: str,
         description: str,
-    ) -> "_SchemaTable":
+    ) -> "SchemaTable":
         """Create a table within this table and return it."""
-        table = _SchemaTable(
+        table = SchemaTable(
             full_name=f"{self.__full_name}.{name}" if self.__full_name else f"{name}",
             description=description,
         )
@@ -235,7 +236,7 @@ class _SchemaTable:
         return f"{header}{"\n\n".join(tables)}"
 
 
-class Schema(_SchemaTable):
+class Schema(SchemaTable):
     """Schema root; defines and pretty prints configuration options."""
 
     def __init__(self, description: str):
