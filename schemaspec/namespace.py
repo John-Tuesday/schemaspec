@@ -8,7 +8,7 @@ __all__ = [
 import dataclasses
 from typing import Protocol, Self
 
-import schemaspec
+from schemaspec import schema_table, schema_value
 
 METADATA_KEY = "schemaspec"
 
@@ -24,7 +24,7 @@ class SchemaMetaField(Protocol):
 class SchemaItemField(SchemaMetaField):
     """Metadata corresponding to `SchemaItem`"""
 
-    possible_values: list[schemaspec.SchemaValue]
+    possible_values: list[schema_value.SchemaValue]
     description: str | None = None
 
 
@@ -37,10 +37,10 @@ class SchemaTableField(SchemaMetaField):
 
 def schema_from(
     cls,
-    schema_root: schemaspec.SchemaTable = schemaspec.Schema(
+    schema_root: schema_table.SchemaTable = schema_table.Schema(
         description="SCHEMA DESCRIPTION"
     ),
-) -> schemaspec.SchemaTable:
+) -> schema_table.SchemaTable:
     """Create and configure `Schema` according to dataclass and metadata.
 
     Sets `__str__` in `cls` to `format_export` of the resulting schema.
