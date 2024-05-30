@@ -2,6 +2,7 @@ from schemaspec.namespace import (
     METADATA_KEY,
     SchemaItemField,
     SchemaMetaField,
+    SchemaTableField,
     schema_from,
 )
 from schemaspec.schema_table import Namespace, Schema, SchemaTable
