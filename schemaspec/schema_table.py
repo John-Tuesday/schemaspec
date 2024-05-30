@@ -135,12 +135,8 @@ class _SchemaTable:
         return f"{top_str}\n\n{v}\n\n{sub}"
 
     def parse_data[
-        T
-    ](
-        self,
-        data: dict[str, schema_value.BaseType],
-        namespace: Optional[T | Namespace] = None,
-    ) -> (T | Namespace):
+        T: Any
+    ](self, data: dict[str, schema_value.BaseType], namespace: T,) -> T:
         """ "Convert data to objects and assign them as attributes of namespace.
 
         Args:
@@ -157,8 +153,6 @@ class _SchemaTable:
             Exception: Unexpected key in `data`
             Exception: Expected `data` to be dict-like
         """
-        if namespace is None:
-            namespace = Namespace(self.format_export)
         for key, schema in self.__data.items():
             value = (
                 schema.convert_input(data.pop(key))
@@ -170,7 +164,8 @@ class _SchemaTable:
             subdata = data.pop(key, {})
             if not isinstance(subdata, dict):
                 raise Exception(f'Schema expects table (dic) "{subtable.__full_name}"')
-            setattr(namespace, key, subtable.parse_data(subdata))
+            subspace = getattr(namespace, key, Namespace(self.format_export))
+            setattr(namespace, key, subtable.parse_data(subdata, namespace=subspace))
         if len(data) > 0:
             raise Exception(f"Unexpected keys")
         return namespace
@@ -249,16 +244,8 @@ class Schema(_SchemaTable):
 
     def load_toml[
         T
-    ](
-        self,
-        filepath: pathlib.Path,
-        namespace: Optional[T | Namespace] = None,
-    ) -> (
-        T | Namespace
-    ):
+    ](self, filepath: pathlib.Path, namespace: T,) -> T:
         """Load filepath as toml and send output to parse_data()."""
         with open(filepath, "rb") as f:
             data = tomllib.load(f)
-        if namespace is None:
-            namespace = Namespace(self.format_export)
         return self.parse_data(data, namespace=namespace)
