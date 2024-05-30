@@ -140,6 +140,10 @@ class SchemaTable:
     ](self, data: dict[str, schema_value.BaseType], namespace: T,) -> T:
         """ "Convert data to objects and assign them as attributes of namespace.
 
+        All items defined in `data` will overwrite the corresponding attribute in
+        `namespace`. If niether `data` nor `namespace` define an item, then and only then,
+        the attribute in namespace will be set to `schema.default`.
+
         Args:
             data:
                 Map-like object representing basic parsed output, e.g. the
@@ -155,12 +159,11 @@ class SchemaTable:
             Exception: Expected `data` to be dict-like
         """
         for key, schema in self.__data.items():
-            value = (
-                schema.convert_input(data.pop(key))
-                if key in data
-                else schema.default_value
-            )
-            setattr(namespace, key, value)
+            if key in data:
+                value = data.pop(key)
+                setattr(namespace, key, schema.convert_input(value))
+            elif not hasattr(namespace, key):
+                setattr(namespace, key, schema.default_value)
         for key, subtable in self.__subtables.items():
             subdata = data.pop(key, {})
             if not isinstance(subdata, dict):
