@@ -22,3 +22,6 @@ build-backend = "pdm.backend"
 
 [tool.pdm]
 version = { source="file", path="schemaspec/__version__.py" }
+
+[tool.pdm.scripts.manual-test]
+cmd = "python -m tests.manual"
