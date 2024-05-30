@@ -35,12 +35,9 @@ class SchemaTableField(SchemaMetaField):
     description: str | None = None
 
 
-def schema_from(
-    cls,
-    schema_root: schema_table.SchemaTable = schema_table.Schema(
-        description="SCHEMA DESCRIPTION"
-    ),
-) -> schema_table.SchemaTable:
+def schema_from[
+    T: schema_table.SchemaTable
+](cls, schema_root: T = schema_table.Schema(description="SCHEMA DESCRIPTION"),) -> T:
     """Create and configure `Schema` according to dataclass and metadata.
 
     Sets `__str__` in `cls` to `format_export` of the resulting schema.
