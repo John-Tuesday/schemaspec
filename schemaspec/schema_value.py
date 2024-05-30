@@ -1,122 +1,76 @@
 __all__ = [
     "BaseType",
     "SchemaValue",
+    "BoolSchema",
+    "StringSchema",
+    "PathSchema",
 ]
 
 import pathlib
-from typing import Callable, Optional
+from typing import Protocol
 
 type BaseType = str | int | float | bool | list | dict
 
 
-class SchemaValue[T]:
-    """Possible value for a schema item.
+class SchemaValue[T](Protocol):
+    """Convert values to and from schema and python."""
 
-    Converts to and from schema known types, i.e. BaseType.
-    Outputs schema documentation string.
+    def type_spec(self) -> str:
+        """Text to briefly show what valid input values are"""
+        ...
 
-    Attributes:
-        export_doc:
-            String representation in schema documentation, i.e. VALUE in
-                `option = VALUE`
-        export_value:
-            Callable which receives an instance of T and returns a string which
-            is a valid toml value and results in an identical instance of T
-            after parsing and converting input, otherwise returns None.
-        convert_input:
-            Callable which converts a basic parsed toml-value to an instance of
-            T or return None if not possible.
-    """
+    def export_value(self, value: T) -> str | None:
+        """Export `value` to valid string representation."""
+        ...
 
-    def __init__(
-        self,
-        export_doc: str,
-        export_value: Callable[[T], Optional[str]],
-        convert_input: Callable[[BaseType], Optional[T]],
-    ):
-        self.export_doc = export_doc
-        self.export_value = export_value
-        self.convert_input = convert_input
+    def convert_input(self, input: BaseType) -> T | None:
+        """Convert primative to full type."""
+        ...
 
-    @staticmethod
-    def export_none(value: None) -> str | None:
-        if value is not None:
-            return None
-        return "false"
 
-    @staticmethod
-    def convert_none(input: BaseType) -> bool | None:
-        if not isinstance(input, bool) or input:
-            return None
-        return False
+class BoolSchema(SchemaValue[bool]):
+    def type_spec(self) -> str:
+        return "true | false"
 
-    @staticmethod
-    def none_schema() -> "SchemaValue":
-        return SchemaValue(
-            export_doc="None",
-            export_value=SchemaValue.export_none,
-            convert_input=SchemaValue.convert_none,
-        )
-
-    @staticmethod
-    def export_bool(value: bool) -> str | None:
+    def export_value(self, value: bool) -> str | None:
         if not isinstance(value, bool):
             return None
         return "true" if value else "false"
 
-    @staticmethod
-    def convert_bool(input: BaseType) -> bool | None:
+    def convert_input(self, input: BaseType) -> bool | None:
+        """Convert primative to full type."""
         if not isinstance(input, bool):
             return None
         return input
 
-    @staticmethod
-    def bool_schema() -> "SchemaValue":
-        return SchemaValue(
-            export_doc="true | false",
-            export_value=SchemaValue.export_bool,
-            convert_input=SchemaValue.convert_bool,
-        )
 
-    @staticmethod
-    def export_str(value: str) -> str | None:
+class StringSchema(SchemaValue[str]):
+    def type_spec(self) -> str:
+        return '"<string>"'
+
+    def export_value(self, value: str) -> str | None:
         if not isinstance(value, str):
             return None
         return f'"{value}"'
 
-    @staticmethod
-    def convert_str(input: BaseType) -> str | None:
+    def convert_input(self, input: BaseType) -> str | None:
+        """Convert primative to full type."""
         if not isinstance(input, str):
             return None
         return input
 
-    @staticmethod
-    def str_schema() -> "SchemaValue":
-        return SchemaValue(
-            export_doc='"<string>"',
-            export_value=SchemaValue.export_str,
-            convert_input=SchemaValue.convert_str,
-        )
 
-    @staticmethod
-    def export_path(path: pathlib.Path) -> str | None:
-        """Return path surrounded in double-quotes."""
-        if not isinstance(path, pathlib.Path):
+class PathSchema(SchemaValue[pathlib.Path]):
+    def type_spec(self) -> str:
+        return '"<path>"'
+
+    def export_value(self, value: pathlib.Path) -> str | None:
+        if not isinstance(value, pathlib.Path):
             return None
-        return f'"{path}"'
+        return f'"{value}"'
 
-    @staticmethod
-    def convert_path(input: BaseType) -> pathlib.Path:
-        """Convert input to a path or raise an exception."""
-        if isinstance(input, str):
-            return pathlib.Path(input)
-        raise Exception("input type needs to be string")
-
-    @staticmethod
-    def path_schema() -> "SchemaValue":
-        """Create a new schema value which expects path input/output."""
-        return SchemaValue(
-            export_doc='"<path>"',
-            export_value=SchemaValue.export_path,
-            convert_input=SchemaValue.convert_path,
-        )
+    def convert_input(self, input: BaseType) -> pathlib.Path | None:
+        """Convert primative to full type."""
+        if not isinstance(input, str):
+            return None
+        return pathlib.Path(input)
