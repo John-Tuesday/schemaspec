@@ -39,6 +39,26 @@ class SchemaValue[T]:
         self.convert_input = convert_input
 
     @staticmethod
+    def export_none(value: None) -> str | None:
+        if value is not None:
+            return None
+        return "false"
+
+    @staticmethod
+    def convert_none(input: BaseType) -> bool | None:
+        if not isinstance(input, bool) or input:
+            return None
+        return False
+
+    @staticmethod
+    def none_schema() -> "SchemaValue":
+        return SchemaValue(
+            export_doc="None",
+            export_value=SchemaValue.export_none,
+            convert_input=SchemaValue.convert_none,
+        )
+
+    @staticmethod
     def export_bool(value: bool) -> str | None:
         if not isinstance(value, bool):
             return None
@@ -79,8 +99,10 @@ class SchemaValue[T]:
         )
 
     @staticmethod
-    def export_path(path: pathlib.Path) -> str:
+    def export_path(path: pathlib.Path) -> str | None:
         """Return path surrounded in double-quotes."""
+        if not isinstance(path, pathlib.Path):
+            return None
         return f'"{path}"'
 
     @staticmethod
