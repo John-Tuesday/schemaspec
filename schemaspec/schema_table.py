@@ -158,7 +158,7 @@ class _SchemaTable:
             Exception: Expected `data` to be dict-like
         """
         if namespace is None:
-            namespace = Namespace()
+            namespace = Namespace(self.format_export)
         for key, schema in self.__data.items():
             value = (
                 schema.convert_input(data.pop(key))
