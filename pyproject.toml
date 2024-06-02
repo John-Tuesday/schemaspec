@@ -31,4 +31,4 @@ doc = [
 [tool.pdm.scripts]
 manual-test = "python -m tests.manual"
 serve-docs = "pdoc schemaspec"
-make-docs = "pdoc schemaspec -o ./docs"
+make-docs = "pdoc schemaspec -o \"${PDM_PROJECT_ROOT}/docs/api/{args}\""
