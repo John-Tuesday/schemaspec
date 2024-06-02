@@ -1,3 +1,6 @@
+"""Schema builders and nestable units.
+"""
+
 __all__ = [
     "Schema",
     "SchemaTable",
@@ -13,7 +16,7 @@ from schemaspec import schema_value
 
 
 class Namespace:
-    """Simple class used by parse_data() to hold attributes and return."""
+    """Simple class used by `SchemaTable.parse_data()` to hold attributes and return."""
 
     def __init__(self, formatter: Optional[Callable[[Any], str]] = None):
         self.__formatter = formatter if formatter else lambda x: f"{vars(x)}"
@@ -84,12 +87,9 @@ class SchemaTable:
     def __init__(self, full_name: str, description: str = ""):
         """Create a new (sub)table.
 
-        Args:
-            full_name:
-                Toml-compliant name of this table, i.e. 'parent.child'
-                An emtpy string indicates the table to Top-Level
-            description:
-                Summary of this table. Will be displayed in help_str()
+        :param `full_name`: Toml-compliant name of this table, i.e. 'parent.child' An
+            emtpy string indicates the table to Top-Level.
+        :param `description`: Summary of this table. Will be displayed in `help_str()`.
         """
         self.__full_name = full_name
         self.__description = description
@@ -103,7 +103,7 @@ class SchemaTable:
         default,
         description: str,
     ) -> None:
-        """Add schema item"""
+        """Add schema item."""
         self.__data[name] = _SchemaItem(
             short_name=name,
             possible_values=possible_values,
@@ -125,7 +125,10 @@ class SchemaTable:
         return table
 
     def help_str(self, level: int = 0) -> str:
-        """Return a string providing schema description and usage information."""
+        """Return a string providing schema description and usage information.
+
+        :param `level`: The number of parents of this table. Currently unused.
+        """
         top_str = [f"[{self.__full_name}]"] if self.__full_name else []
         top_str.append(self.__description)
         top_str = "\n".join(top_str)
@@ -144,19 +147,15 @@ class SchemaTable:
         `namespace`. If niether `data` nor `namespace` define an item, then and only then,
         the attribute in namespace will be set to `schema.default`.
 
-        Args:
-            data:
-                Map-like object representing basic parsed output, e.g. the
-                output of `tomllib.load()`
-            namespace:
-                Namespace-like object whose attributes will be set according
-                to schema. Create new Namespace if not specified.
+        :param `data`: Map-like object representing basic parsed output, e.g. the output
+            of `tomllib.load()`
+        :param `namespace`: Namespace-like object whose attributes will be set according
+            to schema.
 
-        Returns: Populated namespace.
+        :return: Populated `namespace`.
 
-        Raises:
-            Exception: Unexpected key in `data`
-            Exception: Expected `data` to be dict-like
+        :raises: `Exception` if unexpected key in `data` or expected child of `data` to
+            be dict-like.
         """
         for key, schema in self.__data.items():
             if key in data:
@@ -182,9 +181,15 @@ class SchemaTable:
     ) -> str:
         """Format namespace attributes given by keys according to schema.
 
-        Children are seperated with a dot '.' and there is no way to escape it yet.
+        :param `namespace`: Namespace-like object whose attributes are the parsed result
+            of a configuration file.
+        :param `keys`: Sequence of strings specifying children to include. Nested
+            children are seperated with a dot `'.'`, but *be cautious* as there is no way
+            to escape the dot ... *yet*.
+        :param `use_fullname`: Toggle if output specifies keys using dot notation or
+            table headers.
 
-        Returns: A valid toml string representing values of namespace at keys.
+        :return: A valid toml string representing values of namespace at keys.
         """
         if not keys:
             return self.format_export(namespace=namespace)
@@ -221,11 +226,12 @@ class SchemaTable:
     def format_export(self, namespace: Any) -> str:
         """Format namespace according to schema.
 
-        Keys in this must match with namespace, but extra attributes or keys in
-        namespace are ignored.
+        *Functionally equivalent to `format_export_keys()` but with fewer options.*
 
-        Returns:
-            Convert namespace to a valid toml file.
+        Keys in defined in `self` must match with attributes in `namespace`, except
+        extra attributes or keys in `namespace` are ignored.
+
+        :return: Convert `namespace` to a valid toml file.
         """
         header = f"[{self.__full_name}]\n" if self.__full_name else ""
         vals = []
@@ -249,7 +255,7 @@ class Schema(SchemaTable):
     def load_toml[
         T
     ](self, filepath: pathlib.Path, namespace: T,) -> T:
-        """Load filepath as toml and send output to parse_data()."""
+        """Load `filepath` as toml and send output to `parse_data()`."""
         with open(filepath, "rb") as f:
             data = tomllib.load(f)
         return self.parse_data(data, namespace=namespace)

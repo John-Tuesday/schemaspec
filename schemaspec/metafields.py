@@ -1,8 +1,12 @@
+"""Create `schemaspec.schema_table.Schema` from dataclasses.
+"""
+
 __all__ = [
     "SchemaMetaField",
     "SchemaItemField",
     "SchemaTableField",
     "schema_from",
+    "METADATA_KEY",
 ]
 
 import dataclasses
@@ -11,18 +15,20 @@ from typing import Protocol, Self
 from schemaspec import schema_table, schema_value
 
 METADATA_KEY = "schemaspec"
+"""dataclass field metadata key; prevents clashing with other extensions."""
 
 
 class SchemaMetaField(Protocol):
-    """Field within a `dataclass.Field.metadata` helps configures schema."""
+    """Field within a `dataclasses.Field` metadata helps configures schema."""
 
     def metadata(self) -> dict[str, Self]:
+        """Converts this into a dict to be used in a dataclass field's metadata."""
         return {METADATA_KEY: self}
 
 
 @dataclasses.dataclass
 class SchemaItemField(SchemaMetaField):
-    """Metadata corresponding to `SchemaItem`"""
+    """Metadata corresponding to `schemaspec.schema_table._SchemaItem`."""
 
     possible_values: list[schema_value.SchemaValue]
     description: str | None = None
@@ -30,7 +36,7 @@ class SchemaItemField(SchemaMetaField):
 
 @dataclasses.dataclass
 class SchemaTableField(SchemaMetaField):
-    """Metadata corresponding to `SchemaTable`"""
+    """Metadata corresponding to `schemaspec.schema_table.SchemaTable`."""
 
     description: str | None = None
 
@@ -38,9 +44,14 @@ class SchemaTableField(SchemaMetaField):
 def schema_from[
     T: schema_table.SchemaTable
 ](cls, schema_root: T = schema_table.Schema(description="SCHEMA DESCRIPTION"),) -> T:
-    """Create and configure `Schema` according to dataclass and metadata.
+    """Initialize `schema_root` using metadata in `cls`.
 
-    Sets `__str__` in `cls` to `format_export` of the resulting schema.
+    Sets `cls.__str__()` to `format_export()` of the resulting schema.
+
+    :param `cls`: Class whose fields define a schema.
+    :param `schema_root`: The schema parent which will be populated.
+
+    :return: `schema_root` after being configured.
     """
     if not dataclasses.is_dataclass(cls):
         raise TypeError(f"{cls} needs to be a dataclass")

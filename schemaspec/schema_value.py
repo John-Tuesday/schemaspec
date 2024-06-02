@@ -1,3 +1,6 @@
+"""Type conversion / specification
+"""
+
 __all__ = [
     "BaseType",
     "SchemaValue",
@@ -10,13 +13,14 @@ import pathlib
 from typing import Protocol
 
 type BaseType = str | int | float | bool | list | dict
+"""Primative types which can be implicitly converted to and from Python."""
 
 
 class SchemaValue[T](Protocol):
     """Convert values to and from schema and python."""
 
     def type_spec(self) -> str:
-        """Text to briefly show what valid input values are"""
+        """Text to briefly show what valid input values are."""
         ...
 
     def export_value(self, value: T) -> str | None:
@@ -29,6 +33,8 @@ class SchemaValue[T](Protocol):
 
 
 class BoolSchema(SchemaValue[bool]):
+    """Bool type schema."""
+
     def type_spec(self) -> str:
         return "true | false"
 
@@ -45,6 +51,8 @@ class BoolSchema(SchemaValue[bool]):
 
 
 class StringSchema(SchemaValue[str]):
+    """String type schema."""
+
     def type_spec(self) -> str:
         return '"<string>"'
 
@@ -61,6 +69,8 @@ class StringSchema(SchemaValue[str]):
 
 
 class PathSchema(SchemaValue[pathlib.Path]):
+    """Path type schema."""
+
     def type_spec(self) -> str:
         return '"<path>"'
 
