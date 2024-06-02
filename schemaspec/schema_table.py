@@ -245,6 +245,15 @@ class SchemaTable:
             tables.append(v)
         return f"{header}{"\n\n".join(tables)}"
 
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}"
+            f"(full_name={self.__full_name!r}, description={self.__description!r})"
+        )
+
+    def __str__(self) -> str:
+        return self.help_str()
+
 
 class Schema(SchemaTable):
     """Schema root; defines and pretty prints configuration options."""
