@@ -2,14 +2,14 @@ import dataclasses
 import pathlib
 
 import schemaspec
-from schemaspec import namespace
+from schemaspec import metafields
 
 
 @dataclasses.dataclass
 class SettingsSpec:
     mods_home: pathlib.Path = dataclasses.field(
         default=pathlib.Path("mods/home"),
-        metadata=namespace.SchemaItemField(
+        metadata=metafields.SchemaItemField(
             possible_values=[schemaspec.PathSchema()],
         ).metadata(),
     )
@@ -18,20 +18,20 @@ class SettingsSpec:
     class DefaultGameSpec:
         name: str = dataclasses.field(
             default="Guilty Gear Strive",
-            metadata=namespace.SchemaItemField(
+            metadata=metafields.SchemaItemField(
                 possible_values=[schemaspec.StringSchema()],
             ).metadata(),
         )
         enabled: bool = dataclasses.field(
             default=True,
-            metadata=namespace.SchemaItemField(
+            metadata=metafields.SchemaItemField(
                 possible_values=[schemaspec.BoolSchema()],
             ).metadata(),
         )
 
     default_game: DefaultGameSpec = dataclasses.field(
         default_factory=DefaultGameSpec,
-        metadata=namespace.SchemaTableField().metadata(),
+        metadata=metafields.SchemaTableField().metadata(),
     )
 
     @dataclasses.dataclass
@@ -39,7 +39,7 @@ class SettingsSpec:
         @dataclasses.dataclass
         class GameSpec:
             name: str = dataclasses.field(
-                metadata=namespace.SchemaItemField(
+                metadata=metafields.SchemaItemField(
                     possible_values=[schemaspec.StringSchema()],
                 ).metadata(),
             )
@@ -47,7 +47,7 @@ class SettingsSpec:
                 default=pathlib.Path(
                     "~/.steam/root/steamapps/common/GUILTY GEAR STRIVE/"
                 ),
-                metadata=namespace.SchemaItemField(
+                metadata=metafields.SchemaItemField(
                     possible_values=[
                         schemaspec.PathSchema(),
                     ],
@@ -58,17 +58,17 @@ class SettingsSpec:
             default_factory=lambda: SettingsSpec.PredefinedGamesSpec.GameSpec(
                 name="guilty_gear_strive"
             ),
-            metadata=namespace.SchemaTableField().metadata(),
+            metadata=metafields.SchemaTableField().metadata(),
         )
 
     games: PredefinedGamesSpec = dataclasses.field(
         default_factory=PredefinedGamesSpec,
-        metadata=namespace.SchemaTableField().metadata(),
+        metadata=metafields.SchemaTableField().metadata(),
     )
 
 
 def test_main():
-    res = namespace.schema_from(SettingsSpec)
+    res = metafields.schema_from(SettingsSpec)
     print(f"{res=!s}")
     res_ns = res.parse_data(
         data={"mods_home": "actual/mods/home"},

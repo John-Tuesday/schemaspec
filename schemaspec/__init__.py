@@ -1,4 +1,4 @@
-from schemaspec.namespace import (
+from schemaspec.metafields import (
     METADATA_KEY,
     SchemaItemField,
     SchemaMetaField,
