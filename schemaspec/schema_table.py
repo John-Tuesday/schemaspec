@@ -4,11 +4,13 @@
 __all__ = [
     "Schema",
     "SchemaItem",
+    "OnConversionError",
     "SchemaTable",
     "Namespace",
 ]
 
 import dataclasses
+import enum
 import pathlib
 import tomllib
 from typing import Any, Callable, Optional
@@ -82,6 +84,21 @@ class SchemaItem[T]:
         return s
 
 
+class OnConversionError(enum.Enum):
+    """Action to take when `SchemaTable.parse_data()` fails to convert input value."""
+
+    IGNORE = enum.auto()
+    """Do nothing."""
+    SET_NONE = enum.auto()
+    """Set the value to `None`."""
+    SET_DEFAULT = enum.auto()
+    """Set the value to the corresponding schema default."""
+    REMOVE = enum.auto()
+    """Delete attribute if it existed, otherwise do nothing."""
+    FAIL = enum.auto()
+    """Raise an error."""
+
+
 class SchemaTable:
     """Table of key-value options and optionally subtables."""
 
@@ -149,7 +166,12 @@ class SchemaTable:
 
     def parse_data[
         T: Any
-    ](self, data: dict[str, schema_value.BaseType], namespace: T,) -> T:
+    ](
+        self,
+        data: dict[str, schema_value.BaseType],
+        namespace: T,
+        error_mode: OnConversionError = OnConversionError.FAIL,
+    ) -> T:
         """ "Convert data to objects and assign them as attributes of namespace.
 
         All items defined in `data` will overwrite the corresponding attribute in
@@ -169,7 +191,26 @@ class SchemaTable:
         for key, schema in self.__data.items():
             if key in data:
                 value = data.pop(key)
-                setattr(namespace, key, schema.convert_input(value))
+                result = schema.convert_input(value)
+                if result is not None:
+                    setattr(namespace, key, result)
+                    continue
+                match error_mode:
+                    case OnConversionError.FAIL:
+                        msg = (
+                            f"{schema.short_name} in {self.__full_name or "root"} table"
+                            f" cannot convert '{value!r}' to an appropriate value.\n"
+                            f"\nHelp:\n{schema.help_str()}"
+                        )
+                        raise ValueError(msg)
+                    case OnConversionError.IGNORE:
+                        continue
+                    case OnConversionError.REMOVE if hasattr(namespace, key):
+                        delattr(namespace, key)
+                    case OnConversionError.SET_DEFAULT:
+                        setattr(namespace, key, schema.default_value)
+                    case OnConversionError.SET_NONE:
+                        setattr(namespace, key, None)
             elif not hasattr(namespace, key):
                 setattr(namespace, key, schema.default_value)
         for key, subtable in self.__subtables.items():
@@ -177,7 +218,11 @@ class SchemaTable:
             if not isinstance(subdata, dict):
                 raise Exception(f'Schema expects table (dic) "{subtable.__full_name}"')
             subspace = getattr(namespace, key, Namespace(self.format_export))
-            setattr(namespace, key, subtable.parse_data(subdata, namespace=subspace))
+            setattr(
+                namespace,
+                key,
+                subtable.parse_data(subdata, namespace=subspace, error_mode=error_mode),
+            )
         if len(data) > 0:
             raise Exception(f"Unexpected keys")
         return namespace

@@ -12,7 +12,7 @@ from schemaspec.metafields import (
     SchemaTableField,
     schema_from,
 )
-from schemaspec.schema_table import Namespace, Schema, SchemaTable
+from schemaspec.schema_table import Namespace, OnConversionError, Schema, SchemaTable
 from schemaspec.schema_value import (
     BaseType,
     BoolSchema,
