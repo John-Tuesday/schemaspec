@@ -3,6 +3,7 @@
 
 __all__ = [
     "Schema",
+    "SchemaItem",
     "SchemaTable",
     "Namespace",
 ]
@@ -26,7 +27,7 @@ class Namespace:
 
 
 @dataclasses.dataclass
-class _SchemaItem[T]:
+class SchemaItem[T]:
     """Option in a schema.
 
     Attributes:
@@ -104,7 +105,7 @@ class SchemaTable:
         description: str,
     ) -> None:
         """Add schema item."""
-        self.__data[name] = _SchemaItem(
+        self.__data[name] = SchemaItem(
             short_name=name,
             possible_values=possible_values,
             default_value=default,
