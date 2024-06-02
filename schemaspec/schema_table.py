@@ -67,7 +67,7 @@ class SchemaItem[T]:
 
     def usage_str(self) -> str:
         """Return, as a string, the usage help."""
-        v = " | ".join([x.export_doc for x in self.possible_values])
+        v = " | ".join([x.type_spec() for x in self.possible_values])
         return f"{self.short_name} = {v}"
 
     def help_str(self, tab: str = "  ") -> str:
