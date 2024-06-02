@@ -72,7 +72,7 @@ class SchemaItem[T]:
 
     def help_str(self, tab: str = "  ") -> str:
         """Return summary of this value's purpose and usage, and default value."""
-        s = f"\n\n{tab}".join(
+        s = f"\n{tab}".join(
             [
                 self.usage_str(),
                 self.description,
@@ -130,14 +130,22 @@ class SchemaTable:
 
         :param `level`: The number of parents of this table. Currently unused.
         """
+        s = []
         top_str = [f"[{self.__full_name}]"] if self.__full_name else []
-        top_str.append(self.__description)
+        if self.__description:
+            top_str.append(self.__description)
         top_str = "\n".join(top_str)
-        sub = "\n\n".join(
+        if top_str:
+            s.append(top_str)
+        vals = "\n".join([x.help_str() for x in self.__data.values()])
+        if vals:
+            s.append(vals)
+        subs = "\n\n".join(
             [x.help_str(level=level + 1) for x in self.__subtables.values()]
         )
-        v = "\n\n".join([x.help_str() for x in self.__data.values()])
-        return f"{top_str}\n\n{v}\n\n{sub}"
+        if subs:
+            s.append(subs)
+        return "\n\n".join(s)
 
     def parse_data[
         T: Any
