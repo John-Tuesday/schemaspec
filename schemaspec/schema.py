@@ -30,7 +30,7 @@ class Namespace:
         return self.__formatter(self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class SchemaItem[T]:
     """Key-value schema. Smallest whole unit of a `Schema`"""
 
@@ -50,19 +50,26 @@ class SchemaItem[T]:
     """Summary details of this item's possibilities and constraints."""
 
     def __post_init__(self):
-        self.type_spec = " | ".join([x.type_spec() for x in self.possible_values])
+        object.__setattr__(
+            self,
+            "type_spec",
+            " | ".join(
+                [x.type_spec() for x in self.possible_values],
+            ),
+        )
         temp = self.export_value(self.default_value)
         if temp is None:
             raise ValueError("Default value cannot be exported.")
-        self.default_input = temp
-        wrapper = textwrap.TextWrapper(
-            tabsize=4,
-        )
+        object.__setattr__(self, "default_input", temp)
+        wrapper = textwrap.TextWrapper(tabsize=4)
         desc = "\n".join(map(wrapper.fill, self.description.split("\n\n")))
         default_sect = f"Default: {self.default_input}"
         usage = f"{self.short_name} = {self.type_spec}"
-        self.help_str = textwrap.indent("\n".join([desc, default_sect]), "  ")
-        self.help_str = "\n".join([usage, self.help_str])
+        object.__setattr__(
+            self,
+            "help_str",
+            f"{usage}\n{textwrap.indent("\n".join([desc, default_sect]), "  ")}",
+        )
 
     def export_value(self, value: T) -> str | None:
         """Convert `value` to a valid schema-value.
@@ -237,11 +244,12 @@ class SchemaTable:
 
         :param `namespace`: Namespace-like object whose attributes are the parsed result
             of a configuration file.
-        :param `keys`: Sequence of strings specifying children to include. Nested
-            children are seperated with a dot `'.'`, but *be cautious* as there is no way
-            to escape the dot ... *yet*.
+        :param `keys`: Sequence of strings specifying children to include. Leave it
+            empty to include all children. Nested children are seperated with a dot
+            `'.'`, but *be cautious* as there is no way to escape the dot ... *yet*.
         :param `use_fullname`: Toggle if output specifies keys using dot notation or
             table headers.
+        :param `show_help`: Include help texts as comments.
 
         :return: A valid toml string representing values of namespace at keys.
 
