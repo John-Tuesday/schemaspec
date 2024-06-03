@@ -111,7 +111,7 @@ class SchemaTable:
         """
         self.__full_name = full_name
         self.__description = description
-        self.__data = {}
+        self._items: dict[str, SchemaItem] = {}
         self.__subtables = {}
 
     def _fullname_of(self, name: str) -> str:
@@ -125,7 +125,7 @@ class SchemaTable:
         description: str,
     ) -> None:
         """Add schema item."""
-        self.__data[name] = SchemaItem(
+        self._items[name] = SchemaItem(
             short_name=name,
             possible_values=possible_values,
             default_value=default,
@@ -157,7 +157,7 @@ class SchemaTable:
         top_str = "\n".join(top_str)
         if top_str:
             s.append(top_str)
-        vals = "\n".join([x.help_str() for x in self.__data.values()])
+        vals = "\n".join([x.help_str() for x in self._items.values()])
         if vals:
             s.append(vals)
         subs = "\n\n".join(
@@ -193,7 +193,7 @@ class SchemaTable:
         :raises: `ValueError` if a schema-value cannot be converted to its full type,
             and `error_mode` is `OnConversionError.FAIL`.
         """
-        for key, schema in self.__data.items():
+        for key, schema in self._items.items():
             if key in data:
                 value = data.pop(key)
                 result = schema.convert_input(value)
@@ -257,11 +257,11 @@ class SchemaTable:
             header = f"[{self.__full_name}]\n"
         vals = []
         tables = []
-        for key in keys or itertools.chain(self.__data.keys(), self.__subtables.keys()):
+        for key in keys or itertools.chain(self._items.keys(), self.__subtables.keys()):
             child_keys = key.split(".", maxsplit=1)
             root_key = child_keys.pop(0)
-            if root_key in self.__data:
-                schema = self.__data[root_key]
+            if root_key in self._items:
+                schema = self._items[root_key]
                 rhs = schema.export_value(getattr(namespace, root_key))
                 lhs = (
                     self._fullname_of(schema.short_name)
