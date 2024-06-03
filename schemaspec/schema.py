@@ -2,11 +2,11 @@
 """
 
 __all__ = [
+    "Namespace",
+    "OnConversionError",
     "Schema",
     "SchemaItem",
-    "OnConversionError",
     "SchemaTable",
-    "Namespace",
 ]
 
 import dataclasses
