@@ -111,8 +111,8 @@ class SchemaTable:
         """
         self.__full_name = full_name
         self.__description = description
-        self._items: dict[str, SchemaItem] = {}
-        self._subtables: dict[str, SchemaTable] = {}
+        self.__items: dict[str, SchemaItem] = {}
+        self.__subtables: dict[str, SchemaTable] = {}
 
     def _fullname_of(self, name: str) -> str:
         return f"{self.__full_name}.{name}" if self.__full_name else name
@@ -125,7 +125,7 @@ class SchemaTable:
         description: str,
     ) -> None:
         """Add schema item."""
-        self._items[name] = SchemaItem(
+        self.__items[name] = SchemaItem(
             short_name=name,
             possible_values=possible_values,
             default_value=default,
@@ -142,7 +142,7 @@ class SchemaTable:
             full_name=self._fullname_of(name),
             description=description,
         )
-        self._subtables[name] = table
+        self.__subtables[name] = table
         return table
 
     def help_str(self, level: int = 0) -> str:
@@ -157,11 +157,11 @@ class SchemaTable:
         top_str = "\n".join(top_str)
         if top_str:
             s.append(top_str)
-        vals = "\n".join([x.help_str() for x in self._items.values()])
+        vals = "\n".join([x.help_str() for x in self.__items.values()])
         if vals:
             s.append(vals)
         subs = "\n\n".join(
-            [x.help_str(level=level + 1) for x in self._subtables.values()]
+            [x.help_str(level=level + 1) for x in self.__subtables.values()]
         )
         if subs:
             s.append(subs)
@@ -193,7 +193,7 @@ class SchemaTable:
         :raises: `ValueError` if a schema-value cannot be converted to its full type,
             and `error_mode` is `OnConversionError.FAIL`.
         """
-        for key, schema in self._items.items():
+        for key, schema in self.__items.items():
             if key in data:
                 value = data.pop(key)
                 result = schema.convert_input(value)
@@ -218,7 +218,7 @@ class SchemaTable:
                         setattr(namespace, key, None)
             elif not hasattr(namespace, key):
                 setattr(namespace, key, schema.default_value)
-        for key, subtable in self._subtables.items():
+        for key, subtable in self.__subtables.items():
             subdata = data.pop(key, {})
             if not isinstance(subdata, dict):
                 raise TypeError(f'Schema expects table (dic) "{subtable.__full_name}"')
@@ -257,11 +257,13 @@ class SchemaTable:
             header = f"[{self.__full_name}]\n"
         vals = []
         tables = []
-        for key in keys or itertools.chain(self._items.keys(), self._subtables.keys()):
+        for key in keys or itertools.chain(
+            self.__items.keys(), self.__subtables.keys()
+        ):
             child_keys = key.split(".", maxsplit=1)
             root_key = child_keys.pop(0)
-            if root_key in self._items:
-                schema = self._items[root_key]
+            if root_key in self.__items:
+                schema = self.__items[root_key]
                 rhs = schema.export_value(getattr(namespace, root_key))
                 lhs = (
                     self._fullname_of(schema.short_name)
@@ -269,8 +271,8 @@ class SchemaTable:
                     else schema.short_name
                 )
                 vals.append(f"{lhs} = {rhs}")
-            elif root_key in self._subtables:
-                subtable_schema = self._subtables[root_key]
+            elif root_key in self.__subtables:
+                subtable_schema = self.__subtables[root_key]
                 subtable_ns = getattr(namespace, root_key)
                 tables.append(
                     subtable_schema.format_export(
