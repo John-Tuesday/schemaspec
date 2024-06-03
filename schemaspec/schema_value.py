@@ -3,13 +3,13 @@
 
 __all__ = [
     "BaseType",
-    "BoolSchema",
-    "ChoiceSchema",
-    "FloatSchema",
-    "IntSchema",
-    "PathSchema",
-    "SchemaValue",
-    "StringSchema",
+    "BoolAdapter",
+    "SubgroupTypeAdapter",
+    "FloatAdapter",
+    "IntAdapter",
+    "PathAdapter",
+    "TypeAdapter",
+    "StringAdapter",
 ]
 
 import dataclasses
@@ -20,7 +20,7 @@ type BaseType = str | int | float | bool | list | dict
 """Primative types which can be implicitly converted to and from Python."""
 
 
-class SchemaValue[T](Protocol):
+class TypeAdapter[T](Protocol):
     """Convert values to and from schema and python."""
 
     def type_spec(self) -> str:
@@ -40,10 +40,10 @@ class SchemaValue[T](Protocol):
         ...
 
 
-class ChoiceSchema[T](SchemaValue[T]):
+class SubgroupTypeAdapter[T](TypeAdapter[T]):
     """A given value is only valid if it is equal to one of given choices.
 
-    If no choices are specified, act just like `SchemaValue`.
+    If no choices are specified, act just like `TypeAdapter`.
     """
 
     def __init__(self, default_type_spec: str, choices: tuple[T, ...] = tuple()):
@@ -77,7 +77,7 @@ class ChoiceSchema[T](SchemaValue[T]):
 
 
 @dataclasses.dataclass
-class BoolSchema(ChoiceSchema[bool]):
+class BoolAdapter(SubgroupTypeAdapter[bool]):
     """Bool type schema."""
 
     def __init__(self, choices: tuple[bool, ...] = ()):
@@ -102,7 +102,7 @@ class BoolSchema(ChoiceSchema[bool]):
 
 
 @dataclasses.dataclass
-class IntSchema(ChoiceSchema[int]):
+class IntAdapter(SubgroupTypeAdapter[int]):
     """Int type schema."""
 
     def __init__(self, choices: tuple[int, ...] = ()):
@@ -127,7 +127,7 @@ class IntSchema(ChoiceSchema[int]):
 
 
 @dataclasses.dataclass
-class FloatSchema(ChoiceSchema[float]):
+class FloatAdapter(SubgroupTypeAdapter[float]):
     """Float type schema."""
 
     def __init__(self, choices: tuple[float, ...] = ()):
@@ -152,7 +152,7 @@ class FloatSchema(ChoiceSchema[float]):
 
 
 @dataclasses.dataclass
-class StringSchema(ChoiceSchema[str]):
+class StringAdapter(SubgroupTypeAdapter[str]):
     """String type schema."""
 
     def __init__(self, choices: tuple[str, ...] = ()):
@@ -176,7 +176,7 @@ class StringSchema(ChoiceSchema[str]):
         return input
 
 
-class PathSchema(SchemaValue[pathlib.Path]):
+class PathAdapter(TypeAdapter[pathlib.Path]):
     """Path type schema."""
 
     @override

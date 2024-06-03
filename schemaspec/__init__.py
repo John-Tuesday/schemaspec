@@ -15,11 +15,11 @@ from schemaspec.metafields import (
 from schemaspec.schema_table import Namespace, OnConversionError, Schema, SchemaTable
 from schemaspec.schema_value import (
     BaseType,
-    BoolSchema,
-    ChoiceSchema,
-    FloatSchema,
-    IntSchema,
-    PathSchema,
-    SchemaValue,
-    StringSchema,
+    BoolAdapter,
+    FloatAdapter,
+    IntAdapter,
+    PathAdapter,
+    StringAdapter,
+    SubgroupTypeAdapter,
+    TypeAdapter,
 )

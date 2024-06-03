@@ -30,7 +30,7 @@ class SchemaMetaField(Protocol):
 class SchemaItemField(SchemaMetaField):
     """Metadata corresponding to `schemaspec.schema_table.SchemaItem`."""
 
-    possible_values: list[schema_value.SchemaValue]
+    possible_values: list[schema_value.TypeAdapter]
     description: str | None = None
 
 

@@ -40,7 +40,7 @@ class SchemaItem[T]:
     """
 
     short_name: str
-    possible_values: list[schema_value.SchemaValue]
+    possible_values: list[schema_value.TypeAdapter]
     default_value: T
     description: str
 
@@ -117,7 +117,7 @@ class SchemaTable:
     def add_item(
         self,
         name: str,
-        possible_values: list[schema_value.SchemaValue],
+        possible_values: list[schema_value.TypeAdapter],
         default,
         description: str,
     ) -> None:
