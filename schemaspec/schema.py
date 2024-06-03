@@ -30,28 +30,24 @@ class Namespace:
 
 @dataclasses.dataclass
 class SchemaItem[T]:
-    """Option in a schema.
-
-    Attributes:
-        short_name: Name of this option, excluding any parent tables.
-        possible_values: Un order of priority, a list of value schema.
-        default_value: Value to be used if none is specified.
-        description: Summary of what is being configured. Appears in help_str()
-    """
+    """Key-value schema. Smallest whole unit of a `Schema`"""
 
     short_name: str
+    """Name of this option, excluding any parent tables."""
     possible_values: list[adapters.TypeAdapter]
+    """Un order of priority, a list of value schema."""
     default_value: T
+    """Value to be used if none is specified."""
     description: str
+    """Summary of what is being configured. Appears in `help_str()`."""
 
     def export_value(self, value: T) -> str | None:
-        """Convert value to a valid toml-value.
+        """Convert `value` to a valid schema-value.
 
-        Tries to convert `value` with each possible_values; returns the first
+        Tries to convert `value` with each `possible_values`; returns the first
         valid result.
 
-        Returns:
-            A valid toml-value or None if it is not possible.
+        :return: Value as a schema string or None if it is not possible.
         """
         for schema_v in self.possible_values:
             v = schema_v.export_value(value)
@@ -60,7 +56,10 @@ class SchemaItem[T]:
         return None
 
     def convert_input(self, input: adapters.BaseType) -> T | None:
-        """Convert input to an instance of T."""
+        """Convert from schema-primative `input` to full internal type `T`.
+
+        :return: A new instance of `T`, or None if it cannot be done.
+        """
         for schema_v in self.possible_values:
             v = schema_v.convert_input(input)
             if v is not None:
