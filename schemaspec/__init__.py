@@ -5,15 +5,7 @@ enforce constraints, to produce helpful error messages, to generate user-friendl
 documentation, or to output default configuration with helpful comments.
 """
 
-from schemaspec.metafields import (
-    METADATA_KEY,
-    SchemaItemField,
-    SchemaMetaField,
-    SchemaTableField,
-    schema_from,
-)
-from schemaspec.schema_table import Namespace, OnConversionError, Schema, SchemaTable
-from schemaspec.schema_value import (
+from schemaspec.adapters import (
     BaseType,
     BoolAdapter,
     FloatAdapter,
@@ -23,3 +15,11 @@ from schemaspec.schema_value import (
     SubgroupTypeAdapter,
     TypeAdapter,
 )
+from schemaspec.metafields import (
+    METADATA_KEY,
+    SchemaItemField,
+    SchemaMetaField,
+    SchemaTableField,
+    schema_from,
+)
+from schemaspec.schema_table import Namespace, OnConversionError, Schema, SchemaTable

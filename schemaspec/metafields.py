@@ -12,7 +12,7 @@ __all__ = [
 import dataclasses
 from typing import Protocol, Self
 
-from schemaspec import schema_table, schema_value
+from schemaspec import adapters, schema_table
 
 METADATA_KEY = "schemaspec"
 """dataclass field metadata key; prevents clashing with other extensions."""
@@ -30,7 +30,7 @@ class SchemaMetaField(Protocol):
 class SchemaItemField(SchemaMetaField):
     """Metadata corresponding to `schemaspec.schema_table.SchemaItem`."""
 
-    possible_values: list[schema_value.TypeAdapter]
+    possible_values: list[adapters.TypeAdapter]
     description: str | None = None
 
 

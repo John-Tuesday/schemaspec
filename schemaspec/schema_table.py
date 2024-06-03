@@ -15,7 +15,7 @@ import pathlib
 import tomllib
 from typing import Any, Callable, Optional
 
-from schemaspec import schema_value
+from schemaspec import adapters
 
 
 class Namespace:
@@ -40,7 +40,7 @@ class SchemaItem[T]:
     """
 
     short_name: str
-    possible_values: list[schema_value.TypeAdapter]
+    possible_values: list[adapters.TypeAdapter]
     default_value: T
     description: str
 
@@ -59,7 +59,7 @@ class SchemaItem[T]:
                 return v
         return None
 
-    def convert_input(self, input: schema_value.BaseType) -> T | None:
+    def convert_input(self, input: adapters.BaseType) -> T | None:
         """Convert input to an instance of T."""
         for schema_v in self.possible_values:
             v = schema_v.convert_input(input)
@@ -117,7 +117,7 @@ class SchemaTable:
     def add_item(
         self,
         name: str,
-        possible_values: list[schema_value.TypeAdapter],
+        possible_values: list[adapters.TypeAdapter],
         default,
         description: str,
     ) -> None:
@@ -168,7 +168,7 @@ class SchemaTable:
         T: Any
     ](
         self,
-        data: dict[str, schema_value.BaseType],
+        data: dict[str, adapters.BaseType],
         namespace: T,
         error_mode: OnConversionError = OnConversionError.FAIL,
     ) -> T:
