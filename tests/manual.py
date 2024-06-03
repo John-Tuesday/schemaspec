@@ -1,3 +1,5 @@
+# TODO: from_spec() does not verify default value is in accordance to metadata
+
 import dataclasses
 import pathlib
 
@@ -10,7 +12,14 @@ class SettingsSpec:
     mods_home: pathlib.Path = dataclasses.field(
         default=pathlib.Path("mods/home"),
         metadata=metafields.SchemaItemField(
-            possible_values=[schemaspec.PathSchema()],
+            possible_values=[schemaspec.PathAdapter()],
+        ).metadata(),
+    )
+
+    alpha: str = dataclasses.field(
+        default="enabled",
+        metadata=metafields.SchemaItemField(
+            possible_values=[schemaspec.StringAdapter()],
         ).metadata(),
     )
 
@@ -19,13 +28,13 @@ class SettingsSpec:
         name: str = dataclasses.field(
             default="Guilty Gear Strive",
             metadata=metafields.SchemaItemField(
-                possible_values=[schemaspec.StringSchema()],
+                possible_values=[schemaspec.StringAdapter()],
             ).metadata(),
         )
         enabled: bool = dataclasses.field(
             default=True,
             metadata=metafields.SchemaItemField(
-                possible_values=[schemaspec.BoolSchema()],
+                possible_values=[schemaspec.BoolAdapter()],
             ).metadata(),
         )
 
@@ -40,7 +49,7 @@ class SettingsSpec:
         class GameSpec:
             name: str = dataclasses.field(
                 metadata=metafields.SchemaItemField(
-                    possible_values=[schemaspec.StringSchema()],
+                    possible_values=[schemaspec.StringAdapter()],
                 ).metadata(),
             )
             game_path: pathlib.Path = dataclasses.field(
@@ -49,7 +58,8 @@ class SettingsSpec:
                 ),
                 metadata=metafields.SchemaItemField(
                     possible_values=[
-                        schemaspec.PathSchema(),
+                        schemaspec.BoolAdapter(choices=(False,)),
+                        schemaspec.PathAdapter(),
                     ],
                 ).metadata(),
             )
@@ -69,14 +79,21 @@ class SettingsSpec:
 
 def test_main():
     res = metafields.schema_from(SettingsSpec)
-    print(f"{res=!s}")
     res_ns = res.parse_data(
-        data={"mods_home": "actual/mods/home"},
+        data={
+            "mods_home": "actual/mods/home",
+            "alpha": "",
+            # "games": {"guilty_gear_strive": {"game_path": True}},
+        },
         namespace=SettingsSpec(),
+        error_mode=schemaspec.OnConversionError.FAIL,
     )
     div = "=" * 80
     print(div)
     print(f"Namespace:\n\n{res_ns}")
+    print(div)
+    print(f"Schema help\n{'-'*80}")
+    print(f"{res.help_str()}")
     print(div)
 
 
