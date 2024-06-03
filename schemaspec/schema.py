@@ -145,27 +145,15 @@ class SchemaTable:
         self.__subtables[name] = table
         return table
 
-    def help_str(self, level: int = 0) -> str:
-        """Return a string providing schema description and usage information.
-
-        :param `level`: The number of parents of this table. Currently unused.
-        """
-        s = []
-        top_str = [f"[{self.__full_name}]"] if self.__full_name else []
+    def help_str(self) -> str:
+        """Return a string providing schema description and usage information."""
+        header = [f"[{self.__full_name}]"] if self.__full_name else []
         if self.__description:
-            top_str.append(self.__description)
-        top_str = "\n".join(top_str)
-        if top_str:
-            s.append(top_str)
+            header.append(self.__description)
+        header = "\n".join(header)
         vals = "\n".join([x.help_str() for x in self.__items.values()])
-        if vals:
-            s.append(vals)
-        subs = "\n\n".join(
-            [x.help_str(level=level + 1) for x in self.__subtables.values()]
-        )
-        if subs:
-            s.append(subs)
-        return "\n\n".join(s)
+        subs = "\n\n".join([x.help_str() for x in self.__subtables.values()])
+        return "\n\n".join([x for x in [header, vals, subs] if x])
 
     def parse_data[
         T: Any
