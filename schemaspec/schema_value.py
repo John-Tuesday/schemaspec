@@ -103,7 +103,7 @@ class BoolSchema(ChoiceSchema[bool]):
 
 @dataclasses.dataclass
 class IntSchema(ChoiceSchema[int]):
-    """String type schema."""
+    """Int type schema."""
 
     def __init__(self, choices: tuple[int, ...] = ()):
         super().__init__(default_type_spec="<integer>", choices=choices)
@@ -128,7 +128,7 @@ class IntSchema(ChoiceSchema[int]):
 
 @dataclasses.dataclass
 class FloatSchema(ChoiceSchema[float]):
-    """String type schema."""
+    """Float type schema."""
 
     def __init__(self, choices: tuple[float, ...] = ()):
         super().__init__(default_type_spec="<float>", choices=choices)
