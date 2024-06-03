@@ -112,7 +112,7 @@ class SchemaTable:
         self.__full_name = full_name
         self.__description = description
         self._items: dict[str, SchemaItem] = {}
-        self.__subtables = {}
+        self._subtables: dict[str, SchemaTable] = {}
 
     def _fullname_of(self, name: str) -> str:
         return f"{self.__full_name}.{name}" if self.__full_name else name
@@ -142,7 +142,7 @@ class SchemaTable:
             full_name=self._fullname_of(name),
             description=description,
         )
-        self.__subtables[name] = table
+        self._subtables[name] = table
         return table
 
     def help_str(self, level: int = 0) -> str:
@@ -161,7 +161,7 @@ class SchemaTable:
         if vals:
             s.append(vals)
         subs = "\n\n".join(
-            [x.help_str(level=level + 1) for x in self.__subtables.values()]
+            [x.help_str(level=level + 1) for x in self._subtables.values()]
         )
         if subs:
             s.append(subs)
@@ -218,7 +218,7 @@ class SchemaTable:
                         setattr(namespace, key, None)
             elif not hasattr(namespace, key):
                 setattr(namespace, key, schema.default_value)
-        for key, subtable in self.__subtables.items():
+        for key, subtable in self._subtables.items():
             subdata = data.pop(key, {})
             if not isinstance(subdata, dict):
                 raise TypeError(f'Schema expects table (dic) "{subtable.__full_name}"')
@@ -257,7 +257,7 @@ class SchemaTable:
             header = f"[{self.__full_name}]\n"
         vals = []
         tables = []
-        for key in keys or itertools.chain(self._items.keys(), self.__subtables.keys()):
+        for key in keys or itertools.chain(self._items.keys(), self._subtables.keys()):
             child_keys = key.split(".", maxsplit=1)
             root_key = child_keys.pop(0)
             if root_key in self._items:
@@ -269,8 +269,8 @@ class SchemaTable:
                     else schema.short_name
                 )
                 vals.append(f"{lhs} = {rhs}")
-            elif root_key in self.__subtables:
-                subtable_schema = self.__subtables[root_key]
+            elif root_key in self._subtables:
+                subtable_schema = self._subtables[root_key]
                 subtable_ns = getattr(namespace, root_key)
                 tables.append(
                     subtable_schema.format_export(
