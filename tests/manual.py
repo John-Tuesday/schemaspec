@@ -90,6 +90,9 @@ def test_main():
     )
     div = "=" * 80
     print(div)
+    keys = []  # ["games", "default_game.enabled"]
+    print(f"{res.format_export(namespace=res_ns, keys=keys, use_fullname=True)}")
+    print(div)
     print(f"Namespace:\n\n{res_ns}")
     print(div)
     print(f"Schema help\n{'-'*80}")
