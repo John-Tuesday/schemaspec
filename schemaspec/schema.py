@@ -188,8 +188,10 @@ class SchemaTable:
 
         :return: Populated `namespace`.
 
-        :raises: `Exception` if unexpected key in `data` or expected child of `data` to
-            be dict-like.
+        :raises: `KeyError` if unexpected key in `data`
+        :raises: `TypeError` if expected child of `data` to be dict-like.
+        :raises: `ValueError` if a schema-value cannot be converted to its full type,
+            and `error_mode` is `OnConversionError.FAIL`.
         """
         for key, schema in self.__data.items():
             if key in data:
@@ -219,7 +221,7 @@ class SchemaTable:
         for key, subtable in self.__subtables.items():
             subdata = data.pop(key, {})
             if not isinstance(subdata, dict):
-                raise Exception(f'Schema expects table (dic) "{subtable.__full_name}"')
+                raise TypeError(f'Schema expects table (dic) "{subtable.__full_name}"')
             subspace = getattr(namespace, key, Namespace(self.format_export))
             setattr(
                 namespace,
@@ -227,7 +229,7 @@ class SchemaTable:
                 subtable.parse_data(subdata, namespace=subspace, error_mode=error_mode),
             )
         if len(data) > 0:
-            raise Exception(f"Unexpected keys")
+            raise KeyError(f"Unexpected keys")
         return namespace
 
     def format_export(
@@ -247,6 +249,8 @@ class SchemaTable:
             table headers.
 
         :return: A valid toml string representing values of namespace at keys.
+
+        :raises: `KeyError` if a key from `keys` cannot be found in this schema.
         """
         header = ""
         if not use_fullname and self.__full_name:
@@ -276,7 +280,7 @@ class SchemaTable:
                     )
                 )
             else:
-                raise Exception("key not found in schema")
+                raise KeyError(f"Schema does not have a child '{root_key}'.")
         if vals:
             tables.insert(0, "\n".join(vals))
         return f"{header}{"\n\n".join(tables)}"
