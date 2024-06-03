@@ -3,13 +3,13 @@
 
 __all__ = [
     "BaseType",
-    "SchemaValue",
-    "ChoiceSchema",
     "BoolSchema",
-    "IntSchema",
+    "ChoiceSchema",
     "FloatSchema",
-    "StringSchema",
+    "IntSchema",
     "PathSchema",
+    "SchemaValue",
+    "StringSchema",
 ]
 
 import dataclasses
