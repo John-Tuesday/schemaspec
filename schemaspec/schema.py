@@ -11,6 +11,7 @@ __all__ = [
 
 import dataclasses
 import enum
+import itertools
 import pathlib
 import tomllib
 from typing import Any, Callable, Optional
@@ -113,6 +114,9 @@ class SchemaTable:
         self.__data = {}
         self.__subtables = {}
 
+    def _fullname_of(self, name: str) -> str:
+        return f"{self.__full_name}.{name}" if self.__full_name else name
+
     def add_item(
         self,
         name: str,
@@ -135,7 +139,7 @@ class SchemaTable:
     ) -> "SchemaTable":
         """Create a table within this table and return it."""
         table = SchemaTable(
-            full_name=f"{self.__full_name}.{name}" if self.__full_name else f"{name}",
+            full_name=self._fullname_of(name),
             description=description,
         )
         self.__subtables[name] = table
@@ -226,10 +230,10 @@ class SchemaTable:
             raise Exception(f"Unexpected keys")
         return namespace
 
-    def format_export_keys(
+    def format_export(
         self,
         namespace: Any,
-        *keys: str,
+        keys: list[str] = [],
         use_fullname: bool = False,
     ) -> str:
         """Format namespace attributes given by keys according to schema.
@@ -244,29 +248,30 @@ class SchemaTable:
 
         :return: A valid toml string representing values of namespace at keys.
         """
-        if not keys:
-            return self.format_export(namespace=namespace)
-        vals = [f"[{self.__full_name}]"] if use_fullname and self.__full_name else []
+        header = ""
+        if not use_fullname and self.__full_name:
+            header = f"[{self.__full_name}]\n"
+        vals = []
         tables = []
-        for key in keys:
+        for key in keys or itertools.chain(self.__data.keys(), self.__subtables.keys()):
             child_keys = key.split(".", maxsplit=1)
             root_key = child_keys.pop(0)
             if root_key in self.__data:
                 schema = self.__data[root_key]
                 rhs = schema.export_value(getattr(namespace, root_key))
                 lhs = (
-                    f"{self.__full_name}.{schema.short_name}"
-                    if use_fullname and self.__full_name
-                    else f"{schema.short_name}"
+                    self._fullname_of(schema.short_name)
+                    if use_fullname
+                    else schema.short_name
                 )
                 vals.append(f"{lhs} = {rhs}")
             elif root_key in self.__subtables:
                 subtable_schema = self.__subtables[root_key]
                 subtable_ns = getattr(namespace, root_key)
                 tables.append(
-                    subtable_schema.format_export_keys(
-                        subtable_ns,
-                        *child_keys,
+                    subtable_schema.format_export(
+                        namespace=subtable_ns,
+                        keys=child_keys,
                         use_fullname=use_fullname,
                     )
                 )
@@ -274,27 +279,6 @@ class SchemaTable:
                 raise Exception("key not found in schema")
         if vals:
             tables.insert(0, "\n".join(vals))
-        return "\n\n".join(tables)
-
-    def format_export(self, namespace: Any) -> str:
-        """Format namespace according to schema.
-
-        *Functionally equivalent to `format_export_keys()` but with fewer options.*
-
-        Keys in defined in `self` must match with attributes in `namespace`, except
-        extra attributes or keys in `namespace` are ignored.
-
-        :return: Convert `namespace` to a valid toml file.
-        """
-        header = f"[{self.__full_name}]\n" if self.__full_name else ""
-        vals = []
-        for key, schema in self.__data.items():
-            v = schema.export_value(getattr(namespace, key))
-            vals.append(f"{key} = {v}")
-        tables = ["\n".join(vals)] if vals else []
-        for key, subtable in self.__subtables.items():
-            v = subtable.format_export(getattr(namespace, key))
-            tables.append(v)
         return f"{header}{"\n\n".join(tables)}"
 
     def __repr__(self) -> str:
