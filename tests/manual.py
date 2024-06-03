@@ -20,6 +20,7 @@ class SettingsSpec:
         default="enabled",
         metadata=metafields.SchemaItemField(
             possible_values=[schemaspec.StringAdapter()],
+            description="blurd blahd\nbloo blow\n" + ("word " * 30),
         ).metadata(),
     )
 
@@ -48,6 +49,7 @@ class SettingsSpec:
         @dataclasses.dataclass
         class GameSpec:
             name: str = dataclasses.field(
+                default="",
                 metadata=metafields.SchemaItemField(
                     possible_values=[schemaspec.StringAdapter()],
                 ).metadata(),
@@ -90,14 +92,41 @@ def test_main():
     )
     div = "=" * 80
     print(div)
-    keys = []  # ["games", "default_game.enabled"]
-    print(f"{res.format_export(namespace=res_ns, keys=keys, use_fullname=True)}")
+    keys = ["games", "default_game.enabled"]
+    print(
+        res.format_export(
+            namespace=res_ns,
+            keys=keys,
+            use_fullname=False,
+            show_help=True,
+        )
+    )
     print(div)
-    print(f"Namespace:\n\n{res_ns}")
+    print(
+        res.format_export(
+            namespace=res_ns,
+            keys=keys,
+            use_fullname=False,
+            show_help=False,
+        )
+    )
     print(div)
-    print(f"Schema help\n{'-'*80}")
-    print(f"{res.help_str()}")
-    print(div)
+    # print(f"Namespace:\n\n{res_ns}")
+    # print(div)
+    # print(f"Schema help\n{'-'*80}")
+    # print(f"{res.help_str()}")
+    # print(div)
+    # import textwrap
+    #
+    # wrapper = textwrap.TextWrapper(
+    #     tabsize=4,
+    #     initial_indent="# ",
+    #     subsequent_indent="# ",
+    # )
+    # text = "blah word" * 30
+    # text = wrapper.wrap(text)
+    # print(f"{type(text)}")
+    # print(text)
 
 
 if __name__ == "__main__":

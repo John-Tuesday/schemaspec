@@ -13,6 +13,7 @@ import dataclasses
 import enum
 import itertools
 import pathlib
+import textwrap
 import tomllib
 from typing import Any, Callable, Optional
 
@@ -41,6 +42,27 @@ class SchemaItem[T]:
     """Value to be used if none is specified."""
     description: str
     """Summary of what is being configured. Appears in `help_str()`."""
+    type_spec: str = dataclasses.field(init=False)
+    """Combined types from `possible_values`"""
+    default_input: str = dataclasses.field(init=False)
+    """Exported `default_value`."""
+    help_str: str = dataclasses.field(init=False)
+    """Summary details of this item's possibilities and constraints."""
+
+    def __post_init__(self):
+        self.type_spec = " | ".join([x.type_spec() for x in self.possible_values])
+        temp = self.export_value(self.default_value)
+        if temp is None:
+            raise ValueError("Default value cannot be exported.")
+        self.default_input = temp
+        wrapper = textwrap.TextWrapper(
+            tabsize=4,
+        )
+        desc = "\n".join(map(wrapper.fill, self.description.split("\n\n")))
+        default_sect = f"Default: {self.default_input}"
+        usage = f"{self.short_name} = {self.type_spec}"
+        self.help_str = textwrap.indent("\n".join([desc, default_sect]), "  ")
+        self.help_str = "\n".join([usage, self.help_str])
 
     def export_value(self, value: T) -> str | None:
         """Convert `value` to a valid schema-value.
@@ -66,22 +88,6 @@ class SchemaItem[T]:
             if v is not None:
                 return v
         return None
-
-    def usage_str(self) -> str:
-        """Return, as a string, the usage help."""
-        v = " | ".join([x.type_spec() for x in self.possible_values])
-        return f"{self.short_name} = {v}"
-
-    def help_str(self, tab: str = "  ") -> str:
-        """Return summary of this value's purpose and usage, and default value."""
-        s = f"\n{tab}".join(
-            [
-                self.usage_str(),
-                self.description,
-                f"Default: {self.export_value(self.default_value)}",
-            ]
-        )
-        return s
 
 
 class OnConversionError(enum.Enum):
@@ -151,7 +157,7 @@ class SchemaTable:
         if self.__description:
             header.append(self.__description)
         header = "\n".join(header)
-        vals = "\n".join([x.help_str() for x in self.__items.values()])
+        vals = "\n".join([x.help_str for x in self.__items.values()])
         subs = "\n\n".join([x.help_str() for x in self.__subtables.values()])
         return "\n\n".join([x for x in [header, vals, subs] if x])
 
@@ -193,7 +199,7 @@ class SchemaTable:
                         msg = (
                             f"{schema.short_name} in {self.__full_name or "root"} table"
                             f" cannot convert '{value!r}' to an appropriate value.\n"
-                            f"\nHelp:\n{schema.help_str()}"
+                            f"\nHelp:\n{schema.help_str}"
                         )
                         raise ValueError(msg)
                     case OnConversionError.IGNORE:
@@ -225,6 +231,7 @@ class SchemaTable:
         namespace: Any,
         keys: list[str] = [],
         use_fullname: bool = False,
+        show_help: bool = False,
     ) -> str:
         """Format namespace attributes given by keys according to schema.
 
@@ -243,6 +250,13 @@ class SchemaTable:
         header = ""
         if not use_fullname and self.__full_name:
             header = f"[{self.__full_name}]\n"
+        if show_help and self.__description:
+            desc = textwrap.fill(
+                self.__description,
+                initial_indent="# ",
+                subsequent_indent="# ",
+            )
+            header = f"{header}{desc}\n\n"
         vals = []
         tables = []
         for key in keys or itertools.chain(
@@ -258,7 +272,11 @@ class SchemaTable:
                     if use_fullname
                     else schema.short_name
                 )
-                vals.append(f"{lhs} = {rhs}")
+                val = f"{lhs} = {rhs}"
+                if show_help:
+                    help_text = textwrap.indent(schema.help_str, "# ", lambda _: True)
+                    val = f"{help_text}\n{val}"
+                vals.append(val)
             elif root_key in self.__subtables:
                 subtable_schema = self.__subtables[root_key]
                 subtable_ns = getattr(namespace, root_key)
@@ -267,12 +285,13 @@ class SchemaTable:
                         namespace=subtable_ns,
                         keys=child_keys,
                         use_fullname=use_fullname,
+                        show_help=show_help,
                     )
                 )
             else:
                 raise KeyError(f"Schema does not have a child '{root_key}'.")
         if vals:
-            tables.insert(0, "\n".join(vals))
+            tables.insert(0, ("\n\n" if show_help else "\n").join(vals))
         return f"{header}{"\n\n".join(tables)}"
 
     def __repr__(self) -> str:
