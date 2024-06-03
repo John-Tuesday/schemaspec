@@ -1,4 +1,4 @@
-"""Create `schemaspec.schema_table.Schema` from dataclasses.
+"""Create `schemaspec.schema.Schema` from dataclasses.
 """
 
 __all__ = [
@@ -12,7 +12,7 @@ __all__ = [
 import dataclasses
 from typing import Protocol, Self
 
-from schemaspec import adapters, schema_table
+from schemaspec import adapters, schema
 
 METADATA_KEY = "schemaspec"
 """dataclass field metadata key; prevents clashing with other extensions."""
@@ -28,7 +28,7 @@ class SchemaMetaField(Protocol):
 
 @dataclasses.dataclass
 class SchemaItemField(SchemaMetaField):
-    """Metadata corresponding to `schemaspec.schema_table.SchemaItem`."""
+    """Metadata corresponding to `schemaspec.schema.SchemaItem`."""
 
     possible_values: list[adapters.TypeAdapter]
     description: str | None = None
@@ -36,14 +36,14 @@ class SchemaItemField(SchemaMetaField):
 
 @dataclasses.dataclass
 class SchemaTableField(SchemaMetaField):
-    """Metadata corresponding to `schemaspec.schema_table.SchemaTable`."""
+    """Metadata corresponding to `schemaspec.schema.SchemaTable`."""
 
     description: str | None = None
 
 
 def schema_from[
-    T: schema_table.SchemaTable
-](cls, schema_root: T = schema_table.Schema(description="SCHEMA DESCRIPTION"),) -> T:
+    T: schema.SchemaTable
+](cls, schema_root: T = schema.Schema(description="SCHEMA DESCRIPTION"),) -> T:
     """Initialize `schema_root` using metadata in `cls`.
 
     Sets `cls.__str__()` to `format_export()` of the resulting schema.

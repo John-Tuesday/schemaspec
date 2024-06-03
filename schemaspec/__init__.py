@@ -22,4 +22,4 @@ from schemaspec.metafields import (
     SchemaTableField,
     schema_from,
 )
-from schemaspec.schema_table import Namespace, OnConversionError, Schema, SchemaTable
+from schemaspec.schema import Namespace, OnConversionError, Schema, SchemaTable
