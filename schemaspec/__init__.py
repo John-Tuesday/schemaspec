@@ -16,6 +16,8 @@ from schemaspec.schema_table import Namespace, OnConversionError, Schema, Schema
 from schemaspec.schema_value import (
     BaseType,
     BoolSchema,
+    FloatSchema,
+    IntSchema,
     PathSchema,
     SchemaValue,
     StringSchema,

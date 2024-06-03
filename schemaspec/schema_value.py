@@ -6,6 +6,8 @@ __all__ = [
     "SchemaValue",
     "ChoiceSchema",
     "BoolSchema",
+    "IntSchema",
+    "FloatSchema",
     "StringSchema",
     "PathSchema",
 ]
@@ -95,6 +97,56 @@ class BoolSchema(ChoiceSchema[bool]):
     def convert_input(self, input: BaseType) -> bool | None:
         """Convert primative to full type."""
         if not isinstance(input, bool) or not self.is_valid(input):
+            return None
+        return input
+
+
+@dataclasses.dataclass
+class IntSchema(ChoiceSchema[int]):
+    """String type schema."""
+
+    def __init__(self, choices: tuple[int, ...] = ()):
+        super().__init__(default_type_spec="<integer>", choices=choices)
+
+    @override
+    def is_valid(self, value: int) -> bool:
+        return isinstance(value, int) and super().is_valid(value)
+
+    @override
+    def export_value(self, value: int) -> str | None:
+        if not self.is_valid(value):
+            return None
+        return f"{value}"
+
+    @override
+    def convert_input(self, input: BaseType) -> int | None:
+        """Convert primative to full type."""
+        if not isinstance(input, int) or not self.is_valid(input):
+            return None
+        return input
+
+
+@dataclasses.dataclass
+class FloatSchema(ChoiceSchema[float]):
+    """String type schema."""
+
+    def __init__(self, choices: tuple[float, ...] = ()):
+        super().__init__(default_type_spec="<float>", choices=choices)
+
+    @override
+    def is_valid(self, value: float) -> bool:
+        return isinstance(value, float) and super().is_valid(value)
+
+    @override
+    def export_value(self, value: float) -> str | None:
+        if not self.is_valid(value):
+            return None
+        return f"{value}"
+
+    @override
+    def convert_input(self, input: BaseType) -> float | None:
+        """Convert primative to full type."""
+        if not isinstance(input, float) or not self.is_valid(input):
             return None
         return input
 
