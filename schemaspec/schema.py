@@ -57,7 +57,7 @@ class SchemaItem[T]:
                 [x.type_spec for x in self.possible_values],
             ),
         )
-        temp = self.export_value(self.default_value)
+        temp = self.export(self.default_value)
         if temp is None:
             raise ValueError("Default value cannot be exported.")
         object.__setattr__(self, "default_input", temp)
@@ -71,7 +71,13 @@ class SchemaItem[T]:
             f"{usage}\n{textwrap.indent("\n".join([desc, default_sect]), "  ")}",
         )
 
-    def export_value(self, value: T) -> str | None:
+    def is_valid(self, value: T) -> bool:
+        for adapter in self.possible_values:
+            if adapter.is_valid(value):
+                return True
+        return False
+
+    def export(self, value: T) -> str | None:
         """Convert `value` to a valid schema-value.
 
         Tries to convert `value` with each `possible_values`; returns the first
@@ -85,13 +91,13 @@ class SchemaItem[T]:
                 return v
         return None
 
-    def convert_input(self, input: adapters.BaseType) -> T | None:
+    def convert(self, value: adapters.BaseType) -> T | None:
         """Convert from schema-primative `input` to full internal type `T`.
 
         :return: A new instance of `T`, or None if it cannot be done.
         """
         for schema_v in self.possible_values:
-            v = schema_v.convert(input)
+            v = schema_v.convert(value)
             if v is not None:
                 return v
         return None
@@ -197,7 +203,7 @@ class SchemaTable:
         for key, schema in self.__items.items():
             if key in data:
                 value = data.pop(key)
-                result = schema.convert_input(value)
+                result = schema.convert(value)
                 if result is not None:
                     setattr(namespace, key, result)
                     continue
@@ -274,7 +280,7 @@ class SchemaTable:
             root_key = child_keys.pop(0)
             if root_key in self.__items:
                 schema = self.__items[root_key]
-                rhs = schema.export_value(getattr(namespace, root_key))
+                rhs = schema.export(getattr(namespace, root_key))
                 lhs = (
                     self._fullname_of(schema.short_name)
                     if use_fullname
