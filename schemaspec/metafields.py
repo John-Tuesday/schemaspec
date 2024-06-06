@@ -48,22 +48,24 @@ def __schema_from[
         raise TypeError(f"{cls} needs to be a dataclass")
     for field in dataclasses.fields(cls):
         data = field.metadata.get(METADATA_KEY, SchemaTableField())
-        default = None
-        if field.default is not dataclasses.MISSING:
-            default = field.default
-        elif field.default_factory is not dataclasses.MISSING:
-            default = field.default_factory()
+        default_factory = None
+        if field.default_factory is not dataclasses.MISSING:
+            default_factory = field.default_factory
+        elif field.default is not dataclasses.MISSING:
+            default_factory = lambda: field.default
+        else:
+            default_factory = lambda: field.type()
         match data:
             case SchemaItemField():
                 schema_root.add_item(
                     name=field.name,
                     possible_values=data.possible_values,
-                    default=default,
+                    default=default_factory(),
                     description=data.description or "",
                 )
             case SchemaTableField():
                 schema_subtable = schema_root.add_subtable(
-                    make_cls=lambda x=default: x,
+                    make_cls=default_factory,
                     name=field.name,
                     description=data.description or "",
                 )
