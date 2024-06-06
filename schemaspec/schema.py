@@ -80,7 +80,7 @@ class SchemaItem[T]:
         :return: Value as a schema string or None if it is not possible.
         """
         for schema_v in self.possible_values:
-            v = schema_v.export_value(value)
+            v = schema_v.export(value)
             if v is not None:
                 return v
         return None
@@ -91,7 +91,7 @@ class SchemaItem[T]:
         :return: A new instance of `T`, or None if it cannot be done.
         """
         for schema_v in self.possible_values:
-            v = schema_v.convert_input(input)
+            v = schema_v.convert(input)
             if v is not None:
                 return v
         return None

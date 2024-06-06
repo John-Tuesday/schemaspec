@@ -33,11 +33,11 @@ class TypeAdapter[T](Protocol):
         """True if `value` is valid."""
         return True
 
-    def export_value(self, value: T) -> str | None:
+    def export(self, value: T) -> str | None:
         """Export `value` to valid string representation."""
         ...
 
-    def convert_input(self, input: BaseType) -> T | None:
+    def convert(self, value: BaseType) -> T | None:
         """Convert primative to full type."""
         ...
 
@@ -66,22 +66,22 @@ class ListAdapter[T](TypeAdapter[list[T]]):
         return all(map(self._element_adapter.is_valid, value))
 
     @override
-    def export_value(self, value: list[T]) -> str | None:
+    def export(self, value: list[T]) -> str | None:
         result = []
         for item in value:
-            v = self._element_adapter.export_value(item)
+            v = self._element_adapter.export(item)
             if not isinstance(v, str):
                 return None
             result.append(v)
         return f"[{", ".join(result)}]"
 
     @override
-    def convert_input(self, input: BaseType) -> list[T] | None:
-        if not isinstance(input, list):
+    def convert(self, value: BaseType) -> list[T] | None:
+        if not isinstance(value, list):
             return None
         result = []
-        for item in input:
-            v = self._element_adapter.convert_input(item)
+        for item in value:
+            v = self._element_adapter.convert(item)
             if v is None:
                 return None
             result.append(v)
@@ -109,7 +109,7 @@ class SubgroupTypeAdapter[T](TypeAdapter[T]):
             return
         s = []
         for choice in self.choices:
-            result = self.export_value(choice)
+            result = self.export(choice)
             if result is None:
                 raise ValueError("Choice is not a valid type")
             s.append(result)
@@ -137,17 +137,17 @@ class BoolAdapter(SubgroupTypeAdapter[bool]):
         return isinstance(value, bool) and super().is_valid(value)
 
     @override
-    def export_value(self, value: bool) -> str | None:
+    def export(self, value: bool) -> str | None:
         if not self.is_valid(value):
             return None
         return "true" if value else "false"
 
     @override
-    def convert_input(self, input: BaseType) -> bool | None:
+    def convert(self, value: BaseType) -> bool | None:
         """Convert primative to full type."""
-        if not isinstance(input, bool) or not self.is_valid(input):
+        if not isinstance(value, bool) or not self.is_valid(value):
             return None
-        return input
+        return value
 
 
 @dataclasses.dataclass
@@ -162,17 +162,17 @@ class IntAdapter(SubgroupTypeAdapter[int]):
         return isinstance(value, int) and super().is_valid(value)
 
     @override
-    def export_value(self, value: int) -> str | None:
+    def export(self, value: int) -> str | None:
         if not self.is_valid(value):
             return None
         return f"{value}"
 
     @override
-    def convert_input(self, input: BaseType) -> int | None:
+    def convert(self, value: BaseType) -> int | None:
         """Convert primative to full type."""
-        if not isinstance(input, int) or not self.is_valid(input):
+        if not isinstance(value, int) or not self.is_valid(value):
             return None
-        return input
+        return value
 
 
 @dataclasses.dataclass
@@ -187,17 +187,17 @@ class FloatAdapter(SubgroupTypeAdapter[float]):
         return isinstance(value, float) and super().is_valid(value)
 
     @override
-    def export_value(self, value: float) -> str | None:
+    def export(self, value: float) -> str | None:
         if not self.is_valid(value):
             return None
         return f"{value}"
 
     @override
-    def convert_input(self, input: BaseType) -> float | None:
+    def convert(self, value: BaseType) -> float | None:
         """Convert primative to full type."""
-        if not isinstance(input, float) or not self.is_valid(input):
+        if not isinstance(value, float) or not self.is_valid(value):
             return None
-        return input
+        return value
 
 
 @dataclasses.dataclass
@@ -212,17 +212,17 @@ class StringAdapter(SubgroupTypeAdapter[str]):
         return isinstance(value, str) and super().is_valid(value)
 
     @override
-    def export_value(self, value: str) -> str | None:
+    def export(self, value: str) -> str | None:
         if not self.is_valid(value):
             return None
         return f'"{value}"'
 
     @override
-    def convert_input(self, input: BaseType) -> str | None:
+    def convert(self, value: BaseType) -> str | None:
         """Convert primative to full type."""
-        if not isinstance(input, str) or not self.is_valid(input):
+        if not isinstance(value, str) or not self.is_valid(value):
             return None
-        return input
+        return value
 
 
 class PathAdapter(TypeAdapter[pathlib.Path]):
@@ -238,15 +238,15 @@ class PathAdapter(TypeAdapter[pathlib.Path]):
         return isinstance(value, pathlib.Path) and super().is_valid(value)
 
     @override
-    def export_value(self, value: pathlib.Path) -> str | None:
+    def export(self, value: pathlib.Path) -> str | None:
         if not isinstance(value, pathlib.Path) or not self.is_valid(value):
             return None
         return f'"{value}"'
 
     @override
-    def convert_input(self, input: BaseType) -> pathlib.Path | None:
+    def convert(self, value: BaseType) -> pathlib.Path | None:
         """Convert primative to full type."""
-        if not isinstance(input, str):
+        if not isinstance(value, str):
             return None
-        path = pathlib.Path(input)
+        path = pathlib.Path(value)
         return path if self.is_valid(path) else None
