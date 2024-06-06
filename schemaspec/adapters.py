@@ -24,6 +24,7 @@ type BaseType = str | int | float | bool | list | dict
 class TypeAdapter[T](Protocol):
     """Convert values to and from schema and python."""
 
+    @property
     def type_spec(self) -> str:
         """Text to briefly show what valid input values are."""
         ...
@@ -53,8 +54,9 @@ class ListAdapter[T](TypeAdapter[list[T]]):
     @property
     def elem_type_spec(self) -> str:
         """Type spec of an element."""
-        return self._element_adapter.type_spec()
+        return self._element_adapter.type_spec
 
+    @property
     @override
     def type_spec(self) -> str:
         return f"[{self.elem_type_spec},]"
@@ -113,6 +115,7 @@ class SubgroupTypeAdapter[T](TypeAdapter[T]):
             s.append(result)
         self.__type_spec = " | ".join(s)
 
+    @property
     @override
     def type_spec(self) -> str:
         return self.__type_spec
@@ -225,6 +228,7 @@ class StringAdapter(SubgroupTypeAdapter[str]):
 class PathAdapter(TypeAdapter[pathlib.Path]):
     """Path type schema."""
 
+    @property
     @override
     def type_spec(self) -> str:
         return '"<path>"'

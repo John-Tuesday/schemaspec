@@ -54,7 +54,7 @@ class SchemaItem[T]:
             self,
             "type_spec",
             " | ".join(
-                [x.type_spec() for x in self.possible_values],
+                [x.type_spec for x in self.possible_values],
             ),
         )
         temp = self.export_value(self.default_value)
