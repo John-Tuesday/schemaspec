@@ -1,5 +1,3 @@
-# TODO: from_spec() does not verify default value is in accordance to metadata
-
 import dataclasses
 import pathlib
 
@@ -48,12 +46,6 @@ class SettingsSpec:
     class PredefinedGamesSpec:
         @dataclasses.dataclass
         class GameSpec:
-            name: str = dataclasses.field(
-                default="",
-                metadata=metafields.SchemaItemField(
-                    possible_values=[schemaspec.StringAdapter()],
-                ).metadata(),
-            )
             game_path: pathlib.Path = dataclasses.field(
                 default=pathlib.Path(
                     "~/.steam/root/steamapps/common/GUILTY GEAR STRIVE/"
@@ -67,9 +59,7 @@ class SettingsSpec:
             )
 
         guilty_gear_strive: GameSpec = dataclasses.field(
-            default_factory=lambda: SettingsSpec.PredefinedGamesSpec.GameSpec(
-                name="guilty_gear_strive"
-            ),
+            default_factory=GameSpec,
             metadata=metafields.SchemaTableField().metadata(),
         )
 
@@ -78,55 +68,43 @@ class SettingsSpec:
         metadata=metafields.SchemaTableField().metadata(),
     )
 
+    inline_test: PredefinedGamesSpec = dataclasses.field(
+        default_factory=lambda x=PredefinedGamesSpec: x(
+            guilty_gear_strive=x.GameSpec(pathlib.Path("alt/default"))
+        ),
+        metadata=metafields.SchemaItemField(
+            possible_values=[
+                schemaspec.BoolAdapter(),
+                metafields.schema_from(PredefinedGamesSpec),
+            ],
+        ).metadata(),
+    )
+
+    alt_test: PredefinedGamesSpec = dataclasses.field(
+        default_factory=lambda x=PredefinedGamesSpec: x(
+            guilty_gear_strive=x.GameSpec(pathlib.Path("alt/default"))
+        ),
+        metadata=metafields.SchemaTableField().metadata(),
+    )
+
 
 def test_main():
-    res = metafields.schema_from(SettingsSpec)
-    res_ns = res.parse_data(
+    settings_schema = metafields.schema_from(SettingsSpec)
+    settings = settings_schema.parse_data(
         data={
             "mods_home": "actual/mods/home",
-            "alpha": "",
-            # "games": {"guilty_gear_strive": {"game_path": True}},
         },
         namespace=SettingsSpec(),
         error_mode=schemaspec.OnConversionError.FAIL,
     )
     div = "=" * 80
     print(div)
-    keys = ["games", "default_game.enabled"]
-    print(
-        res.format_export(
-            namespace=res_ns,
-            keys=keys,
-            use_fullname=False,
-            show_help=True,
-        )
-    )
+    print(settings_schema)
     print(div)
-    print(
-        res.format_export(
-            namespace=res_ns,
-            keys=keys,
-            use_fullname=False,
-            show_help=False,
-        )
-    )
+    print(settings)
     print(div)
-    # print(f"Namespace:\n\n{res_ns}")
-    # print(div)
-    # print(f"Schema help\n{'-'*80}")
-    # print(f"{res.help_str()}")
-    # print(div)
-    # import textwrap
-    #
-    # wrapper = textwrap.TextWrapper(
-    #     tabsize=4,
-    #     initial_indent="# ",
-    #     subsequent_indent="# ",
-    # )
-    # text = "blah word" * 30
-    # text = wrapper.wrap(text)
-    # print(f"{type(text)}")
-    # print(text)
+    print(settings_schema.format_export(namespace=settings, show_help=True))
+    print(div)
 
 
 if __name__ == "__main__":
