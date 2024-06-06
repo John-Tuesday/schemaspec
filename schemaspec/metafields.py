@@ -31,7 +31,9 @@ class SchemaItemField(SchemaMetaField):
     """Metadata corresponding to `schemaspec.schema.SchemaItem`."""
 
     possible_values: list[adapters.TypeAdapter]
+    """Forwarded to `schemaspec.schema.SchemaItem` constructor."""
     description: str | None = None
+    """Brief description, forwarded to `schemaspec.schema.SchemaItem` constructor."""
 
 
 @dataclasses.dataclass
@@ -39,11 +41,21 @@ class SchemaTableField(SchemaMetaField):
     """Metadata corresponding to `schemaspec.schema.SchemaTable`."""
 
     description: str | None = None
+    """Breif description; forwarded to `schemaspec.schema.SchemaTable` constructor."""
 
 
 def __schema_from[
     T
 ](cls: type[T], schema_root: schema.SchemaTable[T],) -> schema.SchemaTable[T]:
+    """Initialize `schema_root` according to `cls` metadata.
+
+    Sets `cls.__str__(self)` to `schemaspec.schema.Schema.format_export(self)` of the resulting schema.
+
+    :param `cls`: Class whose fields define a schema. Must be a dataclass.
+    :param `schema_root`: Schema to be initialized.
+
+    :return `schema_root` after configuration.
+    """
     if not dataclasses.is_dataclass(cls):
         raise TypeError(f"{cls} needs to be a dataclass")
     for field in dataclasses.fields(cls):
