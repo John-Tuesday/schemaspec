@@ -14,7 +14,7 @@ import itertools
 import pathlib
 import textwrap
 import tomllib
-from typing import Any, Callable, Optional, override
+from typing import Callable, Optional, override
 
 from schemaspec import adapters
 
@@ -246,7 +246,7 @@ class SchemaTable[T](adapters.TypeAdapter[T]):
 
     def format_export(
         self,
-        namespace: Any,
+        namespace: Optional[T] = None,
         keys: list[str] = [],
         use_fullname: bool = False,
         show_help: bool = False,
@@ -256,8 +256,7 @@ class SchemaTable[T](adapters.TypeAdapter[T]):
         :param `namespace`: Namespace-like object whose attributes are the parsed result
             of a configuration file.
         :param `keys`: Sequence of strings specifying children to include. Leave it
-            empty to include all children. Nested children are seperated with a dot
-            `'.'`, but *be cautious* as there is no way to escape the dot ... *yet*.
+            empty to include all children. Nested children are seperated with a dot `'.'`, but *be cautious* as there is no way to escape the dot ... *yet*.
         :param `use_fullname`: Toggle if output specifies keys using dot notation or
             table headers.
         :param `show_help`: Include help texts as comments.
@@ -266,6 +265,8 @@ class SchemaTable[T](adapters.TypeAdapter[T]):
 
         :raises: `KeyError` if a key from `keys` cannot be found in this schema.
         """
+        if namespace is None:
+            namespace = self.__make_cls()
         header = ""
         if not use_fullname and self.__fullname:
             header = f"[{self.__fullname}]\n"
