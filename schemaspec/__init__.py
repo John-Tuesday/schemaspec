@@ -23,10 +23,4 @@ from schemaspec.metafields import (
     SchemaTableField,
     schema_from,
 )
-from schemaspec.schema import (
-    Namespace,
-    OnConversionError,
-    Schema,
-    SchemaItem,
-    SchemaTable,
-)
+from schemaspec.schema import OnConversionError, Schema, SchemaItem, SchemaTable

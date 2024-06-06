@@ -2,7 +2,6 @@
 """
 
 __all__ = [
-    "Namespace",
     "OnConversionError",
     "Schema",
     "SchemaItem",
@@ -15,19 +14,9 @@ import itertools
 import pathlib
 import textwrap
 import tomllib
-from typing import Any, Callable, Optional, override
+from typing import Any, Callable, override
 
 from schemaspec import adapters
-
-
-class Namespace:
-    """Simple class used by `SchemaTable.parse_data()` to hold attributes and return."""
-
-    def __init__(self, formatter: Optional[Callable[[Any], str]] = None):
-        self.__formatter = formatter if formatter else lambda x: f"{vars(x)}"
-
-    def __str__(self) -> str:
-        return self.__formatter(self)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -236,7 +225,7 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
             subdata = data.pop(key, {})
             if not isinstance(subdata, dict):
                 raise TypeError(f'Schema expects table (dic) "{subtable.__full_name}"')
-            subspace = getattr(namespace, key, Namespace(self.format_export))
+            subspace = getattr(namespace, key, subtable.__make_cls())
             setattr(
                 namespace,
                 key,
