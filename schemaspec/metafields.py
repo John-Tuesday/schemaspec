@@ -41,18 +41,9 @@ class SchemaTableField(SchemaMetaField):
     description: str | None = None
 
 
-def schema_from[
-    T: schema.SchemaTable
-](cls, schema_root: T = schema.Schema(description="SCHEMA DESCRIPTION"),) -> T:
-    """Initialize `schema_root` using metadata in `cls`.
-
-    Sets `cls.__str__()` to `format_export()` of the resulting schema.
-
-    :param `cls`: Class whose fields define a schema.
-    :param `schema_root`: The schema parent which will be populated.
-
-    :return: `schema_root` after being configured.
-    """
+def __schema_from[
+    T
+](cls: type[T], schema_root: schema.SchemaTable[T],) -> schema.SchemaTable[T]:
     if not dataclasses.is_dataclass(cls):
         raise TypeError(f"{cls} needs to be a dataclass")
     for field in dataclasses.fields(cls):
@@ -72,11 +63,26 @@ def schema_from[
                 )
             case SchemaTableField():
                 schema_subtable = schema_root.add_subtable(
+                    make_cls=lambda x=default: x,
                     name=field.name,
                     description=data.description or "NO DESCRIPTION",
                 )
-                schema_from(field.type, schema_subtable)
+                __schema_from(field.type, schema_subtable)
             case _:
                 raise ValueError(f"Schema metadata needs to be set")
     cls.__str__ = lambda self: schema_root.format_export(self)
+    return schema_root
+
+
+def schema_from[T](cls: type[T]) -> schema.Schema[T]:
+    """Create and initialize a `schemaspec.schema.Schema[T]` using `cls` metadata.
+
+    Sets `cls.__str__(self)` to `schemaspec.schema.Schema.format_export(self)` of the resulting schema.
+
+    :param `cls`: Class whose fields define a schema. Must be a dataclass.
+
+    :return New `schemaspec.schema.Schema[T]` instance.
+    """
+    schema_root = schema.Schema(make_cls=lambda: cls(), description="")
+    __schema_from(cls=cls, schema_root=schema_root)
     return schema_root

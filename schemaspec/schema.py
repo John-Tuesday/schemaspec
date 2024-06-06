@@ -15,7 +15,7 @@ import itertools
 import pathlib
 import textwrap
 import tomllib
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, override
 
 from schemaspec import adapters
 
@@ -118,10 +118,15 @@ class OnConversionError(enum.Enum):
     """Raise an error."""
 
 
-class SchemaTable:
+class SchemaTable[R](adapters.TypeAdapter[R]):
     """Table of key-value options and optionally subtables."""
 
-    def __init__(self, full_name: str, description: str = ""):
+    def __init__(
+        self,
+        make_cls: Callable[[], R],
+        full_name: str,
+        description: str,
+    ):
         """Create a new (sub)table.
 
         :param `full_name`: Toml-compliant name of this table, i.e. 'parent.child' An
@@ -132,6 +137,7 @@ class SchemaTable:
         self.__description = description
         self.__items: dict[str, SchemaItem] = {}
         self.__subtables: dict[str, SchemaTable] = {}
+        self.__make_cls: Callable[[], R] = make_cls
 
     def _fullname_of(self, name: str) -> str:
         return f"{self.__full_name}.{name}" if self.__full_name else name
@@ -151,13 +157,12 @@ class SchemaTable:
             description=description,
         )
 
-    def add_subtable(
-        self,
-        name: str,
-        description: str,
-    ) -> "SchemaTable":
+    def add_subtable[
+        T
+    ](self, make_cls: Callable[[], T], name: str, description: str,) -> "SchemaTable":
         """Create a table within this table and return it."""
         table = SchemaTable(
+            make_cls=make_cls,
             full_name=self._fullname_of(name),
             description=description,
         )
@@ -308,6 +313,41 @@ class SchemaTable:
             tables.insert(0, ("\n\n" if show_help else "\n").join(vals))
         return f"{header}{"\n\n".join(tables)}"
 
+    @property
+    @override
+    def type_spec(self) -> str:
+        l = [
+            f"{k} = {v.type_spec}"
+            for k, v in itertools.chain(self.__items.items(), self.__subtables.items())
+        ]
+        return f"{{ {", ".join(l)} }}"
+
+    @override
+    def is_valid(self, value: R) -> bool:
+        attrs = {k: v for k, v in vars(value) if not k.startswith("_")}
+        for key, adapter in itertools.chain(
+            self.__items.items(), self.__subtables.items()
+        ):
+            if key not in attrs:
+                return False
+            if not adapter.is_valid(attrs.pop(key)):
+                return False
+        return len(attrs) == 0
+
+    @override
+    def export(self, value: R) -> str | None:
+        l = [
+            f"{k} = {v.export(getattr(value, k))}"
+            for k, v in itertools.chain(self.__items.items(), self.__subtables.items())
+        ]
+        return f"{{ {", ".join(l)} }}"
+
+    @override
+    def convert(self, value: adapters.BaseType) -> R | None:
+        if not isinstance(value, dict):
+            return None
+        return self.parse_data(data=value, namespace=self.__make_cls())
+
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}"
@@ -318,12 +358,12 @@ class SchemaTable:
         return self.help_str()
 
 
-class Schema(SchemaTable):
+class Schema[R](SchemaTable[R]):
     """Schema root; defines and pretty prints configuration options."""
 
-    def __init__(self, description: str):
+    def __init__(self, make_cls: Callable[[], R], description: str):
         """Create new instance, with description."""
-        super().__init__(full_name="", description=description)
+        super().__init__(make_cls=make_cls, full_name="", description=description)
 
     def load_toml[
         T
