@@ -14,7 +14,7 @@ import itertools
 import pathlib
 import textwrap
 import tomllib
-from typing import Any, Callable, override
+from typing import Any, Callable, Optional, override
 
 from schemaspec import adapters
 
@@ -151,7 +151,12 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
 
     def add_subtable[
         T
-    ](self, make_cls: Callable[[], T], name: str, description: str,) -> "SchemaTable":
+    ](
+        self,
+        make_cls: Callable[[], T],
+        name: str,
+        description: str,
+    ) -> "SchemaTable[T]":
         """Create a table within this table and return it."""
         table = SchemaTable(
             make_cls=make_cls,
@@ -170,14 +175,12 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         subs = "\n\n".join([x.help_str() for x in self.__subtables.values()])
         return f"{header}{"\n\n".join([x for x in [vals, subs] if x])}"
 
-    def parse_data[
-        T: Any
-    ](
+    def parse_data(
         self,
         data: dict[str, adapters.BaseType],
-        namespace: T,
+        namespace: Optional[R] = None,
         error_mode: OnConversionError = OnConversionError.FAIL,
-    ) -> T:
+    ) -> R:
         """ "Convert data to objects and assign them as attributes of namespace.
 
         All items defined in `data` will overwrite the corresponding attribute in
@@ -196,6 +199,8 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         :raises: `ValueError` if a schema-value cannot be converted to its full type,
             and `error_mode` is `OnConversionError.FAIL`.
         """
+        if namespace is None:
+            namespace = self.__make_cls()
         for key, schema in self.__items.items():
             if key in data:
                 value = data.pop(key)
@@ -356,9 +361,11 @@ class Schema[R](SchemaTable[R]):
         """Create new instance, with description."""
         super().__init__(make_cls=make_cls, full_name="", description=description)
 
-    def load_toml[
-        T
-    ](self, filepath: pathlib.Path, namespace: T,) -> T:
+    def load_toml(
+        self,
+        filepath: pathlib.Path,
+        namespace: Optional[R] = None,
+    ) -> R:
         """Load `filepath` as toml and send output to `parse_data()`."""
         with open(filepath, "rb") as f:
             data = tomllib.load(f)
