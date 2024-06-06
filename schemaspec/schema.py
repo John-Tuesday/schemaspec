@@ -110,12 +110,12 @@ class OnConversionError(enum.Enum):
     """Raise an error."""
 
 
-class SchemaTable[R](adapters.TypeAdapter[R]):
+class SchemaTable[T](adapters.TypeAdapter[T]):
     """Table of key-value options and optionally subtables."""
 
     def __init__(
         self,
-        make_cls: Callable[[], R],
+        make_cls: Callable[[], T],
         full_name: str,
         description: str,
     ):
@@ -129,20 +129,20 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         self.__description = description
         self.__items: dict[str, SchemaItem] = {}
         self.__subtables: dict[str, SchemaTable] = {}
-        self.__make_cls: Callable[[], R] = make_cls
+        self.__make_cls: Callable[[], T] = make_cls
 
     def _fullname_of(self, name: str) -> str:
         return f"{self.__fullname}.{name}" if self.__fullname else name
 
     def add_item[
-        T
+        R
     ](
         self,
         name: str,
         possible_values: list[adapters.TypeAdapter],
-        default: T,
+        default: R,
         description: str,
-    ) -> SchemaItem[T]:
+    ) -> SchemaItem[R]:
         """Add schema item."""
         item = SchemaItem(
             short_name=name,
@@ -154,13 +154,13 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         return item
 
     def add_subtable[
-        T
+        R
     ](
         self,
-        make_cls: Callable[[], T],
+        make_cls: Callable[[], R],
         name: str,
         description: str,
-    ) -> "SchemaTable[T]":
+    ) -> "SchemaTable[R]":
         """Create a table within this table and return it."""
         table = SchemaTable(
             make_cls=make_cls,
@@ -182,9 +182,9 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
     def parse_data(
         self,
         data: dict[str, adapters.BaseType],
-        namespace: Optional[R] = None,
+        namespace: Optional[T] = None,
         error_mode: OnConversionError = OnConversionError.FAIL,
-    ) -> R:
+    ) -> T:
         """ "Convert data to objects and assign them as attributes of namespace.
 
         All items defined in `data` will overwrite the corresponding attribute in
@@ -323,7 +323,7 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         return f"{{ {", ".join(l)} }}"
 
     @override
-    def is_valid(self, value: R) -> bool:
+    def is_valid(self, value: T) -> bool:
         attrs = {k: v for k, v in vars(value) if not k.startswith("_")}
         for key, adapter in itertools.chain(
             self.__items.items(), self.__subtables.items()
@@ -335,7 +335,7 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         return len(attrs) == 0
 
     @override
-    def export(self, value: R) -> str | None:
+    def export(self, value: T) -> str | None:
         l = [
             f"{k} = {v.export(getattr(value, k))}"
             for k, v in itertools.chain(self.__items.items(), self.__subtables.items())
@@ -343,7 +343,7 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         return f"{{ {", ".join(l)} }}"
 
     @override
-    def convert(self, value: adapters.BaseType) -> R | None:
+    def convert(self, value: adapters.BaseType) -> T | None:
         if not isinstance(value, dict):
             return None
         return self.parse_data(data=value, namespace=self.__make_cls())
@@ -358,18 +358,18 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         return self.help_str()
 
 
-class Schema[R](SchemaTable[R]):
+class Schema[T](SchemaTable[T]):
     """Schema root; defines and pretty prints configuration options."""
 
-    def __init__(self, make_cls: Callable[[], R], description: str):
+    def __init__(self, make_cls: Callable[[], T], description: str):
         """Create new instance, with description."""
         super().__init__(make_cls=make_cls, full_name="", description=description)
 
     def load_toml(
         self,
         filepath: pathlib.Path,
-        namespace: Optional[R] = None,
-    ) -> R:
+        namespace: Optional[T] = None,
+    ) -> T:
         """Load `filepath` as toml and send output to `parse_data()`."""
         with open(filepath, "rb") as f:
             data = tomllib.load(f)
