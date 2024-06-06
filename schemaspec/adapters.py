@@ -4,6 +4,7 @@
 __all__ = [
     "BaseType",
     "BoolAdapter",
+    "ListAdapter",
     "SubgroupTypeAdapter",
     "FloatAdapter",
     "IntAdapter",
@@ -38,6 +39,51 @@ class TypeAdapter[T](Protocol):
     def convert_input(self, input: BaseType) -> T | None:
         """Convert primative to full type."""
         ...
+
+
+class ListAdapter[T](TypeAdapter[list[T]]):
+    """List type adapter schema."""
+
+    _element_adapter: TypeAdapter[T]
+    """Element-wise adapter."""
+
+    def __init__(self, element_adapter: TypeAdapter[T]):
+        self._element_adapter = element_adapter
+
+    @property
+    def elem_type_spec(self) -> str:
+        """Type spec of an element."""
+        return self._element_adapter.type_spec()
+
+    @override
+    def type_spec(self) -> str:
+        return f"[{self.elem_type_spec},]"
+
+    @override
+    def is_valid(self, value: list[T]) -> bool:
+        return all(map(self._element_adapter.is_valid, value))
+
+    @override
+    def export_value(self, value: list[T]) -> str | None:
+        result = []
+        for item in value:
+            v = self._element_adapter.export_value(item)
+            if not isinstance(v, str):
+                return None
+            result.append(v)
+        return f"[{", ".join(result)}]"
+
+    @override
+    def convert_input(self, input: BaseType) -> list[T] | None:
+        if not isinstance(input, list):
+            return None
+        result = []
+        for item in input:
+            v = self._element_adapter.convert_input(item)
+            if v is None:
+                return None
+            result.append(v)
+        return result
 
 
 class SubgroupTypeAdapter[T](TypeAdapter[T]):

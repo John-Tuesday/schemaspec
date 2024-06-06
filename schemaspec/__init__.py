@@ -10,6 +10,7 @@ from schemaspec.adapters import (
     BoolAdapter,
     FloatAdapter,
     IntAdapter,
+    ListAdapter,
     PathAdapter,
     StringAdapter,
     SubgroupTypeAdapter,
