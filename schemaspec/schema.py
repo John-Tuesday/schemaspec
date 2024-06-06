@@ -134,20 +134,24 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
     def _fullname_of(self, name: str) -> str:
         return f"{self.__fullname}.{name}" if self.__fullname else name
 
-    def add_item(
+    def add_item[
+        T
+    ](
         self,
         name: str,
         possible_values: list[adapters.TypeAdapter],
-        default,
+        default: T,
         description: str,
-    ) -> None:
+    ) -> SchemaItem[T]:
         """Add schema item."""
-        self.__items[name] = SchemaItem(
+        item = SchemaItem(
             short_name=name,
             possible_values=possible_values,
             default_value=default,
             description=description,
         )
+        self.__items[name] = item
+        return item
 
     def add_subtable[
         T
