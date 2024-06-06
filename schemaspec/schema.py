@@ -61,14 +61,17 @@ class SchemaItem[T]:
         if temp is None:
             raise ValueError("Default value cannot be exported.")
         object.__setattr__(self, "default_input", temp)
+        sects = []
         wrapper = textwrap.TextWrapper(tabsize=4)
         desc = "\n".join(map(wrapper.fill, self.description.split("\n\n")))
-        default_sect = f"Default: {self.default_input}"
+        if desc:
+            sects.append(desc)
+        sects.append(f"Default: {self.default_input}")
         usage = f"{self.short_name} = {self.type_spec}"
         object.__setattr__(
             self,
             "help_str",
-            f"{usage}\n{textwrap.indent("\n".join([desc, default_sect]), "  ")}",
+            f"{usage}\n{textwrap.indent("\n".join(sects), "  ")}",
         )
 
     def is_valid(self, value: T) -> bool:
@@ -171,13 +174,12 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
 
     def help_str(self) -> str:
         """Return a string providing schema description and usage information."""
-        header = [f"[{self.__full_name}]"] if self.__full_name else []
+        header = f"[{self.__full_name}]\n" if self.__full_name else ""
         if self.__description:
-            header.append(self.__description)
-        header = "\n".join(header)
+            header = f"{header}{self.__description}\n\n"
         vals = "\n".join([x.help_str for x in self.__items.values()])
         subs = "\n\n".join([x.help_str() for x in self.__subtables.values()])
-        return "\n\n".join([x for x in [header, vals, subs] if x])
+        return f"{header}{"\n\n".join([x for x in [vals, subs] if x])}"
 
     def parse_data[
         T: Any
