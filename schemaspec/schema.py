@@ -25,7 +25,7 @@ class SchemaItem[T]:
 
     short_name: str
     """Name of this option, excluding any parent tables."""
-    possible_values: list[adapters.TypeAdapter]
+    possible_values: tuple[adapters.TypeAdapter, ...]
     """Un order of priority, a list of value schema."""
     default_value: T
     """Value to be used if none is specified."""
@@ -139,7 +139,7 @@ class SchemaTable[T](adapters.TypeAdapter[T]):
     ](
         self,
         name: str,
-        possible_values: list[adapters.TypeAdapter],
+        possible_values: tuple[adapters.TypeAdapter, ...],
         default: R,
         description: str,
     ) -> SchemaItem[R]:

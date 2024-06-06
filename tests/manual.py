@@ -10,14 +10,14 @@ class SettingsSpec:
     mods_home: pathlib.Path = dataclasses.field(
         default=pathlib.Path("mods/home"),
         metadata=metafields.SchemaItemField(
-            possible_values=[schemaspec.PathAdapter()],
+            possible_values=(schemaspec.PathAdapter(),),
         ).metadata(),
     )
 
     alpha: str = dataclasses.field(
         default="enabled",
         metadata=metafields.SchemaItemField(
-            possible_values=[schemaspec.StringAdapter()],
+            possible_values=(schemaspec.StringAdapter(),),
             description="blurd blahd\nbloo blow\n" + ("word " * 30),
         ).metadata(),
     )
@@ -27,13 +27,13 @@ class SettingsSpec:
         name: str = dataclasses.field(
             default="Guilty Gear Strive",
             metadata=metafields.SchemaItemField(
-                possible_values=[schemaspec.StringAdapter()],
+                possible_values=(schemaspec.StringAdapter(),),
             ).metadata(),
         )
         enabled: bool = dataclasses.field(
             default=True,
             metadata=metafields.SchemaItemField(
-                possible_values=[schemaspec.BoolAdapter()],
+                possible_values=(schemaspec.BoolAdapter(),),
             ).metadata(),
         )
 
@@ -51,10 +51,10 @@ class SettingsSpec:
                     "~/.steam/root/steamapps/common/GUILTY GEAR STRIVE/"
                 ),
                 metadata=metafields.SchemaItemField(
-                    possible_values=[
+                    possible_values=(
                         schemaspec.BoolAdapter(choices=(False,)),
                         schemaspec.PathAdapter(),
-                    ],
+                    ),
                 ).metadata(),
             )
 
@@ -73,10 +73,10 @@ class SettingsSpec:
             guilty_gear_strive=x.GameSpec(pathlib.Path("alt/default"))
         ),
         metadata=metafields.SchemaItemField(
-            possible_values=[
+            possible_values=(
                 schemaspec.BoolAdapter(),
                 metafields.schema_from(PredefinedGamesSpec),
-            ],
+            ),
         ).metadata(),
     )
 

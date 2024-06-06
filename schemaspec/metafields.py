@@ -26,17 +26,17 @@ class SchemaMetaField(Protocol):
         return {METADATA_KEY: self}
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class SchemaItemField(SchemaMetaField):
     """Metadata corresponding to `schemaspec.schema.SchemaItem`."""
 
-    possible_values: list[adapters.TypeAdapter]
+    possible_values: tuple[adapters.TypeAdapter, ...]
     """Forwarded to `schemaspec.schema.SchemaItem` constructor."""
     description: str | None = None
     """Brief description, forwarded to `schemaspec.schema.SchemaItem` constructor."""
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class SchemaTableField(SchemaMetaField):
     """Metadata corresponding to `schemaspec.schema.SchemaTable`."""
 
