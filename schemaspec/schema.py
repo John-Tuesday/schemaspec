@@ -125,14 +125,14 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
             emtpy string indicates the table to Top-Level.
         :param `description`: Summary of this table. Will be displayed in `help_str()`.
         """
-        self.__full_name = full_name
+        self.__fullname = full_name
         self.__description = description
         self.__items: dict[str, SchemaItem] = {}
         self.__subtables: dict[str, SchemaTable] = {}
         self.__make_cls: Callable[[], R] = make_cls
 
     def _fullname_of(self, name: str) -> str:
-        return f"{self.__full_name}.{name}" if self.__full_name else name
+        return f"{self.__fullname}.{name}" if self.__fullname else name
 
     def add_item(
         self,
@@ -168,7 +168,7 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
 
     def help_str(self) -> str:
         """Return a string providing schema description and usage information."""
-        header = f"[{self.__full_name}]\n" if self.__full_name else ""
+        header = f"[{self.__fullname}]\n" if self.__fullname else ""
         if self.__description:
             header = f"{header}{self.__description}\n\n"
         vals = "\n".join([x.help_str for x in self.__items.values()])
@@ -211,7 +211,7 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
                 match error_mode:
                     case OnConversionError.FAIL:
                         msg = (
-                            f"{schema.short_name} in {self.__full_name or "root"} table"
+                            f"{schema.short_name} in {self.__fullname or "root"} table"
                             f" cannot convert '{value!r}' to an appropriate value.\n"
                             f"\nHelp:\n{schema.help_str}"
                         )
@@ -229,7 +229,7 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         for key, subtable in self.__subtables.items():
             subdata = data.pop(key, {})
             if not isinstance(subdata, dict):
-                raise TypeError(f'Schema expects table (dic) "{subtable.__full_name}"')
+                raise TypeError(f'Schema expects table (dic) "{subtable.__fullname}"')
             subspace = getattr(namespace, key, subtable.__make_cls())
             setattr(
                 namespace,
@@ -263,8 +263,8 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
         :raises: `KeyError` if a key from `keys` cannot be found in this schema.
         """
         header = ""
-        if not use_fullname and self.__full_name:
-            header = f"[{self.__full_name}]\n"
+        if not use_fullname and self.__fullname:
+            header = f"[{self.__fullname}]\n"
         if show_help and self.__description:
             desc = textwrap.fill(
                 self.__description,
@@ -347,7 +347,7 @@ class SchemaTable[R](adapters.TypeAdapter[R]):
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}"
-            f"(full_name={self.__full_name!r}, description={self.__description!r})"
+            f"(full_name={self.__fullname!r}, description={self.__description!r})"
         )
 
     def __str__(self) -> str:
