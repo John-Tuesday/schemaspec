@@ -59,13 +59,13 @@ def __schema_from[
                     name=field.name,
                     possible_values=data.possible_values,
                     default=default,
-                    description=data.description or "NO DESCRIPTION",
+                    description=data.description or "",
                 )
             case SchemaTableField():
                 schema_subtable = schema_root.add_subtable(
                     make_cls=lambda x=default: x,
                     name=field.name,
-                    description=data.description or "NO DESCRIPTION",
+                    description=data.description or "",
                 )
                 __schema_from(field.type, schema_subtable)
             case _:
