@@ -43,7 +43,7 @@ class TypeAdapter[T](Protocol):
 
 
 class ListAdapter[T](TypeAdapter[list[T]]):
-    """List type adapter schema."""
+    """List type adapter schema. Every element must be of type `T`."""
 
     _element_adapter: TypeAdapter[T]
     """Element-wise adapter."""
@@ -52,14 +52,9 @@ class ListAdapter[T](TypeAdapter[list[T]]):
         self._element_adapter = element_adapter
 
     @property
-    def elem_type_spec(self) -> str:
-        """Type spec of an element."""
-        return self._element_adapter.type_spec
-
-    @property
     @override
     def type_spec(self) -> str:
-        return f"[{self.elem_type_spec},]"
+        return f"[{self._element_adapter.type_spec},]"
 
     @override
     def is_valid(self, value: list[T]) -> bool:
