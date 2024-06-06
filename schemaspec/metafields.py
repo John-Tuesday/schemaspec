@@ -72,7 +72,11 @@ def __schema_from[
                 __schema_from(field.type, schema_subtable)
             case _:
                 raise ValueError(f"Schema metadata needs to be set")
-    cls.__str__ = lambda self: schema_root.format_export(self)
+
+    def format_str(self) -> str:
+        return schema_root.format_export(namespace=self)
+
+    cls.__str__ = format_str
     return schema_root
 
 
