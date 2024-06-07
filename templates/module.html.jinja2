@@ -1,5 +1,9 @@
 {% extends "default/module.html.jinja2" %}
 
+{% defaultmacro indent_level(line) %}
+{{- ( (line|length) - (line.lstrip() | length) ) | int -}}
+{% enddefaultmacro %}
+
 {% defaultmacro parse_doctest(line, old) %}
 {% if line.startswith(">>>") or line.startswith("...") %}
     {{- "input" -}}
@@ -12,25 +16,49 @@
 {% endif %}
 {% enddefaultmacro %}
 
-{% defaultmacro doctest_output(line) %}
+{% defaultmacro doctest_output(line, tabsize) %}
 {% if line.strip() == "<BLANKLINE>" %}
     {{- "\n" -}}
 {% else %}
-    {{- line -}}
+    {{- "".ljust(tabsize | int) ~ line -}}
+{% endif %}
+{% enddefaultmacro %}
+
+{% defaultmacro parse_output_lang(line) %}
+{% set code = "#:lang " %}
+{% set parts = line.rpartition(code) %}
+{% if parts[1] == code %}
+{{- parts[2] -}}
+{% endif %}
+{% enddefaultmacro %}
+
+{% defaultmacro doctest_input(line, ns) %}
+{% set lang = parse_output_lang(line) %}
+{% set tabsize = indent_level(line) | int %}
+{{- line -}}
+{% if lang %}
+    {{- "".ljust(tabsize) ~ ".. code-block:: " ~ lang ~ "\n" -}}
+    {% set ns.output_end_tag = "".ljust(tabsize) ~ "\n" %}
 {% endif %}
 {% enddefaultmacro %}
 
 {% defaultmacro preprocess(docstring) %}
-{% set ns = namespace(in_doctest="no") %}
+{% set ns = namespace(in_doctest="no", prev_doctest="no", indent_level=0) %}
 {% for line in docstring.splitlines(True) %}
     {% set line_trim = line.strip() %}
+    {% set ns.prev_doctest = ns.in_doctest %}
     {% set ns.in_doctest = parse_doctest(line_trim, ns.in_doctest) %}
+    {% if ns.prev_doctest == "output" and ns.in_doctest != "output" %}
+        {{- ns.output_end_tag -}}
+    {% elif ns.prev_doctest != "output" and ns.in_doctest == "output" %}
+        {% set ns.indent_level = [indent_level(line) | int, 4] | sum %}
+    {% endif %}
     {% if ns.in_doctest == "no" %}
         {{- line -}}
     {% elif ns.in_doctest == "input" %}
-        {{- line | safe -}}
+        {{- doctest_input(line | safe, ns) -}}
     {% elif ns.in_doctest == "output" %}
-        {{- doctest_output(line | safe) -}}
+        {{- doctest_output(line | safe, ns.indent_level) -}}
     {% endif %}
 {% endfor %}
 {% enddefaultmacro %}

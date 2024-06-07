@@ -38,22 +38,21 @@ r"""Create `schemaspec.schema.Schema` from dataclasses.
 >>> foo_schema = schema_from(Foo)
 >>> export = foo_schema.format_export(show_help=True)
 >>> print(export) #:lang toml
-.. code-block:: toml
-    # item = "enabled" | "disabled"
-    #   Default: "enabled"
-    item = "enabled"
-    <BLANKLINE>
-    # bar_inline = { inner = <integer> }
-    #   <bar inline description>
-    #   Default: { inner = 0 }
-    bar_inline = { inner = 0 }
-    <BLANKLINE>
-    [bar_table]
-    # <bar table description>
-    <BLANKLINE>
-    # inner = <integer>
-    #   Default: 0
-    inner = 0
+# item = "enabled" | "disabled"
+#   Default: "enabled"
+item = "enabled"
+<BLANKLINE>
+# bar_inline = { inner = <integer> }
+#   <bar inline description>
+#   Default: { inner = 0 }
+bar_inline = { inner = 0 }
+<BLANKLINE>
+[bar_table]
+# <bar table description>
+<BLANKLINE>
+# inner = <integer>
+#   Default: 0
+inner = 0
 """
 
 __all__ = [
@@ -155,6 +154,10 @@ def schema_from[T](cls: type[T]) -> schema.Schema[T]:
     :param `cls`: Class whose fields define a schema. Must be a dataclass.
 
     :return: New `schemaspec.schema.Schema[T]` instance.
+
+    >>> foo = 0
+    >>> print("local b = 0") #:lang lua
+    local b = 0
     """
     schema_root = schema.Schema(make_cls=lambda: cls(), description="")
     __schema_from(cls=cls, schema_root=schema_root)
