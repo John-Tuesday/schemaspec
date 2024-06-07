@@ -1,4 +1,59 @@
-"""Create `schemaspec.schema.Schema` from dataclasses.
+r"""Create `schemaspec.schema.Schema` from dataclasses.
+
+## Example
+
+>>> import schemaspec
+>>> @dataclasses.dataclass
+... class Foo:
+...     item: str = dataclasses.field(
+...         default="enabled",
+...         metadata=SchemaItemField(
+...             possible_values=(schemaspec.StringAdapter(("enabled", "disabled")),),
+...         ).metadata(),
+...     )
+... 
+...     @dataclasses.dataclass
+...     class Bar:
+...         inner: int = dataclasses.field(
+...             default=0,
+...             metadata=SchemaItemField(
+...                 possible_values=(schemaspec.IntAdapter(),),
+...             ).metadata(),
+...         )
+... 
+...     bar_table: Bar = dataclasses.field(
+...         default_factory=Bar,
+...         metadata=SchemaTableField(
+...             description="<bar table description>",
+...         ).metadata(),
+...     )
+... 
+...     bar_inline: Bar = dataclasses.field(
+...         default_factory=Bar,
+...         metadata=SchemaItemField(
+...             possible_values=(schema_from(Bar),),
+...             description="<bar inline description>",
+...         ).metadata(),
+...     )
+>>> foo_schema = schema_from(Foo)
+>>> export = foo_schema.format_export(show_help=True)
+>>> print(export) #:lang toml
+.. code-block:: toml
+    # item = "enabled" | "disabled"
+    #   Default: "enabled"
+    item = "enabled"
+    <BLANKLINE>
+    # bar_inline = { inner = <integer> }
+    #   <bar inline description>
+    #   Default: { inner = 0 }
+    bar_inline = { inner = 0 }
+    <BLANKLINE>
+    [bar_table]
+    # <bar table description>
+    <BLANKLINE>
+    # inner = <integer>
+    #   Default: 0
+    inner = 0
 """
 
 __all__ = [
@@ -93,13 +148,13 @@ def __schema_from[
 
 
 def schema_from[T](cls: type[T]) -> schema.Schema[T]:
-    """Create and initialize a `schemaspec.schema.Schema[T]` using `cls` metadata.
+    r"""Create and initialize a `schemaspec.schema.Schema[T]` using `cls` metadata.
 
     Sets `cls.__str__(self)` to `schemaspec.schema.Schema.format_export(self)` of the resulting schema.
 
     :param `cls`: Class whose fields define a schema. Must be a dataclass.
 
-    :return New `schemaspec.schema.Schema[T]` instance.
+    :return: New `schemaspec.schema.Schema[T]` instance.
     """
     schema_root = schema.Schema(make_cls=lambda: cls(), description="")
     __schema_from(cls=cls, schema_root=schema_root)

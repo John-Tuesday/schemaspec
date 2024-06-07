@@ -1,4 +1,8 @@
-"""Type conversion / specification
+"""Create type specification and conversion methods in `TypeAdapter` classes.
+
+Create adapters to export values to schema strings and convert base schema types to
+more complex types. More primative `TypeAdapter` classes can be combined to form even
+more complex types, like in `schemaspec.schema.SchemaItem.possible_values`.
 """
 
 __all__ = [
@@ -90,6 +94,11 @@ class SubgroupTypeAdapter[T](TypeAdapter[T]):
     """
 
     def __init__(self, default_type_spec: str, choices: tuple[T, ...] = tuple()):
+        """Initialize `choices` and `type_spec`.
+
+        :param `default_type_spec`: Value for `type_spec` when `choices` is emtpy.
+        :param `choices`: Sets the `choices` value.
+        """
         self.__choices = choices
         self.__init_type_spec(default_type_spec)
 
