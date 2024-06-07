@@ -1,0 +1,11 @@
+.pdoc-code:has(+ .pdoc-code) > pre, .pdoc-code + .pdoc-code > pre {
+    margin-top: 0;
+    margin-bottom: 0;
+    border-top:    none;
+    border-bottom: none;
+}
+
+.pdoc-code + .pdoc-code > pre {
+    border-top: 1px solid var(--accent2);
+    background-color: color-mix(in srgb, var(--code) 75%, var(--accent));
+}
