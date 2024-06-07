@@ -154,10 +154,6 @@ def schema_from[T](cls: type[T]) -> schema.Schema[T]:
     :param `cls`: Class whose fields define a schema. Must be a dataclass.
 
     :return: New `schemaspec.schema.Schema[T]` instance.
-
-    >>> foo = 0
-    >>> print("local b = 0") #:lang lua
-    local b = 0
     """
     schema_root = schema.Schema(make_cls=lambda: cls(), description="")
     __schema_from(cls=cls, schema_root=schema_root)
