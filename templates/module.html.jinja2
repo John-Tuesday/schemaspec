@@ -1,0 +1,43 @@
+{% extends "default/module.html.jinja2" %}
+
+{% defaultmacro parse_doctest(line, old) %}
+{% if line.startswith(">>>") or line.startswith("...") %}
+    {{- "input" -}}
+{% elif line == "" %}
+    {{- "no" -}}
+{% elif old == "input" %}
+    {{- "output" -}}
+{% else %}
+    {{- old -}}
+{% endif %}
+{% enddefaultmacro %}
+
+{% defaultmacro doctest_output(line) %}
+{% if line.strip() == "<BLANKLINE>" %}
+    {{- "\n" -}}
+{% else %}
+    {{- line -}}
+{% endif %}
+{% enddefaultmacro %}
+
+{% defaultmacro preprocess(docstring) %}
+{% set ns = namespace(in_doctest="no") %}
+{% for line in docstring.splitlines(True) %}
+    {% set line_trim = line.strip() %}
+    {% set ns.in_doctest = parse_doctest(line_trim, ns.in_doctest) %}
+    {% if ns.in_doctest == "no" %}
+        {{- line -}}
+    {% elif ns.in_doctest == "input" %}
+        {{- line | safe -}}
+    {% elif ns.in_doctest == "output" %}
+        {{- doctest_output(line | safe) -}}
+    {% endif %}
+{% endfor %}
+{% enddefaultmacro %}
+
+{% defaultmacro docstring(var) %}
+{% if var.docstring %}
+    {% set docstr = preprocess(var.docstring) %}
+    <div class="docstring">{{ docstr | to_markdown | to_html | linkify(namespace=var.qualname) }}</div>
+{% endif %}
+{% enddefaultmacro %}
