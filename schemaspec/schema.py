@@ -17,7 +17,7 @@ import itertools
 import pathlib
 import textwrap
 import tomllib
-from typing import Callable, Optional, override
+from typing import Callable, Iterable, Optional, override
 
 from schemaspec import adapters
 
@@ -271,7 +271,7 @@ class SchemaTable[T](adapters.TypeAdapter[T]):
     def format_export(
         self,
         namespace: Optional[T] = None,
-        keys: list[str] = [],
+        keys: Optional[Iterable[str]] = None,
         use_fullname: bool = False,
         show_help: bool = False,
     ) -> str:
@@ -280,7 +280,7 @@ class SchemaTable[T](adapters.TypeAdapter[T]):
         :param `namespace`: Namespace-like object whose attributes are the parsed result
             of a configuration file, i.e. the result of `parse_data()`, or use the
             output of `make_cls()` if `namespace` is `None`.
-        :param `keys`: Sequence of strings specifying children to include. Leave it
+        :param `keys`: Iterable object of strings specifying children to include. Leave it
             empty to include all children. Nested children are seperated with a dot `'.'`, but *be cautious* as there is no way to escape the dot ... *yet*.
         :param `use_fullname`: Toggle if output specifies keys using dot notation or
             table headers.
