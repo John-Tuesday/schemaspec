@@ -30,5 +30,6 @@ doc = [
 
 [tool.pdm.scripts]
 manual-test = "python -m tests.manual"
+test-all = "python -m unittest"
 serve-docs = "pdoc -t \"${PDM_PROJECT_ROOT}/templates/\" schemaspec"
 make-docs = "pdoc -t \"${PDM_PROJECT_ROOT}/templates/\" schemaspec -o \"${PDM_PROJECT_ROOT}/docs/api/{args}\""
