@@ -20,6 +20,10 @@ dynamic = ["version"]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
+[tool.pyright]
+venvPath = "./"
+venv = ".venv"
+
 [tool.pdm]
 version = { source="file", path="schemaspec/__version__.py" }
 
