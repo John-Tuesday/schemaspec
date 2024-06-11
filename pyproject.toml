@@ -35,14 +35,6 @@ doc = [
 [tool.pdm.scripts]
 manual-test = "python -m tests.manual"
 test-all = "python -m unittest"
-serve-docs = "pdoc -t \"${PDM_PROJECT_ROOT}/templates/\" schemaspec"
-make-docs.shell = """
-  version=$({pdm} show --version)
-  file="${PDM_PROJECT_ROOT}/docs/api/${version}"
-  if [ -e "$file" ]; then
-    echo "file '$file' already exists" 1>&2
-    exit 1
-  fi
-  {pdm} serve-docs -o "$file"
-"""
+serve-docs.call = "scripts.make_docs:serve_docs('schemaspec')"
+make-docs.call = "scripts.make_docs:make_docs"
 pre_make-docs = { composite = ["test-all"] }

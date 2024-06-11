@@ -8,7 +8,7 @@ from pdoc import render, render_helpers, web
 from schemaspec.__version__ import __version__
 
 
-def _run_server(*modules: str, host: str = "localhost"):
+def serve_docs(*modules: str, host: str = "localhost"):
     httpd = web.DocServer((host, 8080), [*modules])
     with httpd:
         url = f"http://{host}:{httpd.server_port}"
@@ -42,7 +42,7 @@ def make_docs():
     # # doc = pdoc.doc.Module.from_name("schemaspec.adapters")
     modules = "schemaspec"
     pdoc.pdoc(modules, output_directory=doc_output)
-    _run_server(modules)
+    serve_docs(modules)
 
 
 if __name__ == "__main__":
