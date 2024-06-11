@@ -8,8 +8,8 @@ from pdoc import render, render_helpers, web
 from schemaspec.__version__ import __version__
 
 
-def serve_docs(*modules: str, host: str = "localhost"):
-    httpd = web.DocServer((host, 8080), [*modules])
+def serve_docs(*modules: str, host: str = "127.0.0.1", port: int = 8080):
+    httpd = web.DocServer((host, port), [*modules])
     with httpd:
         url = f"http://{host}:{httpd.server_port}"
         web.open_browser(url)
